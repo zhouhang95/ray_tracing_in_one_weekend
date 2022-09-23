@@ -5,12 +5,25 @@ use glam::Vec3A;
 use glam::vec3a;
 
 mod math;
-use math::Ray;
+use math::*;
+
+fn hit_sphere(s: Sphere, r: Ray) -> bool {
+    let oc = r.o - s.p;
+    let a = r.d.length_squared();
+    let b = 2.0 * oc.dot(r.d);
+    let c = oc.length_squared()- s.r*s.r;
+    let discriminant = b*b - 4.0*a*c;
+    return discriminant > 0.0;
+}
 
 fn ray_color(r: Ray) -> Vec3A {
-    let r = r.dir.normalize();
-    let t = r.y * 0.5 + 0.5;
-    Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
+    let s = Sphere { p: vec3a(0.0, 0.0, -1.0), r: 0.5 };
+    if hit_sphere(s, r) {
+        vec3a(1.0, 0.0, 0.0)
+    } else {
+        let t = r.d.y * 0.5 + 0.5;
+        Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
+    }
 }
 
 fn main() {
@@ -33,8 +46,8 @@ fn main() {
             let u = i as f32 / (nx - 1) as f32;
             let v = j as f32 / (ny - 1) as f32;
             let c = ray_color(Ray{
-                org: origin,
-                dir: lower_left_corner + u * horizontal + v * vertical - origin,
+                o: origin,
+                d: (lower_left_corner + u * horizontal + v * vertical - origin).normalize(),
             });
 
             img.put_pixel(i, j, Rgb([
