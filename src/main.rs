@@ -7,19 +7,23 @@ use glam::vec3a;
 mod math;
 use math::*;
 
-fn hit_sphere(s: Sphere, r: Ray) -> bool {
+fn hit_sphere(s: Sphere, r: Ray) -> Option<f32> {
     let oc = r.o - s.p;
     let a = r.d.length_squared();
-    let b = 2.0 * oc.dot(r.d);
+    let half_b = oc.dot(r.d);
     let c = oc.length_squared()- s.r*s.r;
-    let discriminant = b*b - 4.0*a*c;
-    return discriminant > 0.0;
+    let discriminant = half_b*half_b - a*c;
+    if discriminant < 0.0 {
+        None
+    } else {
+        Some((-half_b - discriminant.sqrt()) / a)
+    }
 }
 
 fn ray_color(r: Ray) -> Vec3A {
     let s = Sphere { p: vec3a(0.0, 0.0, -1.0), r: 0.5 };
-    if hit_sphere(s, r) {
-        vec3a(1.0, 0.0, 0.0)
+    if let Some(t) = hit_sphere(s, r) {
+        (r.at(t) - s.p).normalize() * 0.5 + 0.5
     } else {
         let t = r.d.y * 0.5 + 0.5;
         Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
