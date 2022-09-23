@@ -64,6 +64,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glam"
+version = "0.21.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "518faa5064866338b013ff9b2350dc318e14cc4fcd6cb8206d7e7c9886c98815"
+
+[[package]]
 name = "image"
 version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -139,5 +145,6 @@ dependencies = [
 name = "ray_tracing_in_one_weekend"
 version = "0.1.0"
 dependencies = [
+ "glam",
  "image",
 ]
