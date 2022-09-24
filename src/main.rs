@@ -8,7 +8,7 @@ mod math;
 use math::*;
 
 fn hit_sphere(s: Sphere, r: Ray) -> Option<f32> {
-    let oc = r.o - s.p;
+    let oc = r.o - s.c;
     let a = r.d.length_squared();
     let half_b = oc.dot(r.d);
     let c = oc.length_squared()- s.r*s.r;
@@ -20,10 +20,10 @@ fn hit_sphere(s: Sphere, r: Ray) -> Option<f32> {
     }
 }
 
-fn ray_color(r: Ray) -> Vec3A {
-    let s = Sphere { p: vec3a(0.0, 0.0, -1.0), r: 0.5 };
-    if let Some(t) = hit_sphere(s, r) {
-        (r.at(t) - s.p).normalize() * 0.5 + 0.5
+fn ray_color(r: Ray, world: &HitableList) -> Vec3A {
+    let mut rec = HitRecord::default();
+    if world.hit(&r, 0.0, f32::MAX, &mut rec) {
+        rec.norm * 0.5 + 0.5
     } else {
         let t = r.d.y * 0.5 + 0.5;
         Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
@@ -39,6 +39,11 @@ fn main() {
     let viewport_width = aspect_ratio * viewport_height;
     let focal_length = 1.0;
 
+    let world: HitableList = vec![
+        Box::new(Sphere {c: vec3a(0.0, 0.0, -1.0), r: 0.5}),
+        Box::new(Sphere {c: vec3a(0.0, -100.5, -1.0), r: 100.0}),
+    ];
+
     let origin = vec3a(0.0, 0.0, 0.0);
     let horizontal = vec3a(viewport_width, 0.0, 0.0);
     let vertical = vec3a(0.0, viewport_height, 0.0);
@@ -52,7 +57,7 @@ fn main() {
             let c = ray_color(Ray{
                 o: origin,
                 d: (lower_left_corner + u * horizontal + v * vertical - origin).normalize(),
-            });
+            }, &world);
 
             img.put_pixel(i, j, Rgb([
                 (c.x * 255.99) as u8,
