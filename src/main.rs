@@ -7,6 +7,9 @@ use glam::vec3a;
 mod math;
 use math::*;
 
+mod camera;
+use camera::Camera;
+
 fn hit_sphere(s: Sphere, r: Ray) -> Option<f32> {
     let oc = r.o - s.c;
     let a = r.d.length_squared();
@@ -35,29 +38,20 @@ fn main() {
     let ny = 100;
     let aspect_ratio = nx as f32 / ny as f32;
 
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
-
     let world: HitableList = vec![
         Box::new(Sphere {c: vec3a(0.0, 0.0, -1.0), r: 0.5}),
         Box::new(Sphere {c: vec3a(0.0, -100.5, -1.0), r: 100.0}),
     ];
 
-    let origin = vec3a(0.0, 0.0, 0.0);
-    let horizontal = vec3a(viewport_width, 0.0, 0.0);
-    let vertical = vec3a(0.0, viewport_height, 0.0);
-    let lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - vec3a(0.0, 0.0, focal_length);
+    let cam = Camera::new(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for j in 0..ny {
         for i in 0..nx {
             let u = i as f32 / (nx - 1) as f32;
             let v = j as f32 / (ny - 1) as f32;
-            let c = ray_color(Ray{
-                o: origin,
-                d: (lower_left_corner + u * horizontal + v * vertical - origin).normalize(),
-            }, &world);
+            let r = cam.get_ray(u, v);
+            let c = ray_color(r, &world);
 
             img.put_pixel(i, j, Rgb([
                 (c.x * 255.99) as u8,
