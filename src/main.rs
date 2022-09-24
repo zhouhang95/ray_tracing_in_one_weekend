@@ -10,18 +10,7 @@ use math::*;
 mod camera;
 use camera::Camera;
 
-fn hit_sphere(s: Sphere, r: Ray) -> Option<f32> {
-    let oc = r.o - s.c;
-    let a = r.d.length_squared();
-    let half_b = oc.dot(r.d);
-    let c = oc.length_squared()- s.r*s.r;
-    let discriminant = half_b*half_b - a*c;
-    if discriminant < 0.0 {
-        None
-    } else {
-        Some((-half_b - discriminant.sqrt()) / a)
-    }
-}
+use rand::Rng;
 
 fn ray_color(r: Ray, world: &HitableList) -> Vec3A {
     let mut rec = HitRecord::default();
@@ -34,6 +23,8 @@ fn ray_color(r: Ray, world: &HitableList) -> Vec3A {
 }
 
 fn main() {
+    let samples_per_pixel = 128;
+
     let nx = 200;
     let ny = 100;
     let aspect_ratio = nx as f32 / ny as f32;
@@ -46,12 +37,18 @@ fn main() {
     let cam = Camera::new(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
+    let mut rng = rand::thread_rng();
     for j in 0..ny {
         for i in 0..nx {
-            let u = i as f32 / (nx - 1) as f32;
-            let v = j as f32 / (ny - 1) as f32;
-            let r = cam.get_ray(u, v);
-            let c = ray_color(r, &world);
+            let mut c = Vec3A::ZERO;
+            for _ in 0..samples_per_pixel {
+                let u = (i as f32 + rng.gen::<f32>()) / nx as f32;
+                let v = (j as f32 + rng.gen::<f32>()) / ny as f32;
+                let r = cam.get_ray(u, v);
+                c += ray_color(r, &world);
+            }
+            c /= samples_per_pixel as f32;
+
 
             img.put_pixel(i, j, Rgb([
                 (c.x * 255.99) as u8,

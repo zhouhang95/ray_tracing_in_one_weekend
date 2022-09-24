@@ -1,5 +1,5 @@
 use glam::Vec3A;
-use std::sync::Arc;
+
 #[derive(Debug, Clone, Copy)]
 pub struct HitRecord {
     pub p: Vec3A,
