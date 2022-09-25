@@ -12,10 +12,13 @@ use camera::Camera;
 
 use rand::Rng;
 
-fn ray_color(r: Ray, world: &HitableList) -> Vec3A {
+fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
+    if depth <= 0 {
+        return vec3a(0.0, 0.0, 0.0);
+    }
     let mut rec = HitRecord::default();
-    if world.hit(&r, 0.0, f32::MAX, &mut rec) {
-        rec.norm * 0.5 + 0.5
+    if world.hit(&r, 0.001, f32::MAX, &mut rec) {
+        0.5 * ray_color(Ray {o: rec.p, d: random_in_hemisphere(rec.norm).normalize()}, &world, depth-1)
     } else {
         let t = r.d.y * 0.5 + 0.5;
         Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
@@ -24,6 +27,7 @@ fn ray_color(r: Ray, world: &HitableList) -> Vec3A {
 
 fn main() {
     let samples_per_pixel = 128;
+    let max_depth = 50;
 
     let nx = 200;
     let ny = 100;
@@ -45,10 +49,10 @@ fn main() {
                 let u = (i as f32 + rng.gen::<f32>()) / nx as f32;
                 let v = (j as f32 + rng.gen::<f32>()) / ny as f32;
                 let r = cam.get_ray(u, v);
-                c += ray_color(r, &world);
+                c += ray_color(r, &world, max_depth);
             }
             c /= samples_per_pixel as f32;
-
+            c = c.powf(1.0 / 2.0);
 
             img.put_pixel(i, j, Rgb([
                 (c.x * 255.99) as u8,
