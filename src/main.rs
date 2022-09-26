@@ -1,5 +1,7 @@
 #![cfg_attr(debug_assertions, allow(dead_code, unused_imports, unused_variables, unused_mut))]
 
+use std::sync::Arc;
+
 use image::{ImageBuffer, RgbImage, Rgb};
 use glam::Vec3A;
 use glam::vec3a;
@@ -9,6 +11,9 @@ use math::*;
 
 mod camera;
 use camera::Camera;
+
+mod hitable;
+use hitable::*;
 
 use rand::Rng;
 
@@ -36,8 +41,8 @@ fn main() {
     let aspect_ratio = nx as f32 / ny as f32;
 
     let world: HitableList = vec![
-        Box::new(Sphere {c: vec3a(0.0, 0.0, -1.0), r: 0.5}),
-        Box::new(Sphere {c: vec3a(0.0, -100.5, -1.0), r: 100.0}),
+        Arc::new(Sphere {c: vec3a(0.0, 0.0, -1.0), r: 0.5}),
+        Arc::new(Sphere {c: vec3a(0.0, -100.5, -1.0), r: 100.0}),
     ];
 
     let cam = Camera::new(aspect_ratio);
