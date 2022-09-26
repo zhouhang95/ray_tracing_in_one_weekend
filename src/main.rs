@@ -12,6 +12,8 @@ use camera::Camera;
 
 use rand::Rng;
 
+use chrono::prelude::*;
+
 fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     if depth <= 0 {
         return vec3a(0.0, 0.0, 0.0);
@@ -62,5 +64,8 @@ fn main() {
         }
     }
     image::imageops::flip_vertical_in_place(&mut img);
-    img.save("test.png").unwrap();
+    let local = Local::now().to_rfc3339().replace(":", "-");
+    let datetime = local.split_once(".").unwrap().0;
+    let file_name = format!("{}.png", datetime);
+    img.save(file_name).unwrap();
 }

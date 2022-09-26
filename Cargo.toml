@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 glam = {version = "0.21", features = ["fast-math"]}
 rand = "0.8"
+chrono = "0.4"
 
 [dependencies.image]
 version = "0.24"
