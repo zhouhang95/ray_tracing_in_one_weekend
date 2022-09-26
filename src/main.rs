@@ -15,6 +15,8 @@ use camera::Camera;
 mod hitable;
 use hitable::*;
 
+mod material;
+
 use rand::Rng;
 
 use chrono::prelude::*;
