@@ -3,6 +3,7 @@ use std::sync::Arc;
 use glam::Vec3A;
 
 use crate::math::Ray;
+use crate::material::Material;
 
 #[derive(Clone)]
 pub struct HitRecord {
@@ -10,6 +11,7 @@ pub struct HitRecord {
     pub norm: Vec3A,
     pub t: f32,
     pub front_face: bool,
+    pub mat: Option<Arc<dyn Material>>,
 }
 
 impl HitRecord {
@@ -19,6 +21,7 @@ impl HitRecord {
             norm: Vec3A::ZERO,
             t: 0.0,
             front_face: true,
+            mat: None,
         }
     }
     fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3A) {

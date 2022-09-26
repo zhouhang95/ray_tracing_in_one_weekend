@@ -26,7 +26,7 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
         return vec3a(0.0, 0.0, 0.0);
     }
     let mut rec = HitRecord::default();
-    if world.hit(&r, 0.001, f32::MAX, &mut rec) {
+    if world.hit(&r, 1e-4, f32::MAX, &mut rec) {
         0.5 * ray_color(Ray {o: rec.p, d: random_in_hemisphere(rec.norm).normalize()}, &world, depth-1)
     } else {
         let t = r.d.y * 0.5 + 0.5;

@@ -1,6 +1,11 @@
 use glam::{Vec3A, vec3a};
 use rand::Rng;
 
+pub fn vec3a_near_zero(v: Vec3A) -> bool {
+    let s = 1e-4;
+    return (v.x.abs() < s) && (v.y.abs() < s) && (v.z.abs() < s);
+}
+
 pub fn vec3a_random() -> Vec3A {
     let mut rng = rand::thread_rng();
     vec3a(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
