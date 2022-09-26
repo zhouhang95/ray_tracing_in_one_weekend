@@ -4,7 +4,7 @@ use glam::Vec3A;
 
 use crate::math::Ray;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone)]
 pub struct HitRecord {
     pub p: Vec3A,
     pub norm: Vec3A,
@@ -81,8 +81,10 @@ impl Hitable for HitableList {
             if be_hit {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                *rec = temp_rec;
             }
+        }
+        if hit_anything {
+            *rec = temp_rec;
         }
         hit_anything
     }
