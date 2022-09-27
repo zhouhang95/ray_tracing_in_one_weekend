@@ -38,10 +38,11 @@ pub trait Hitable {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone)]
 pub struct Sphere {
     pub c: Vec3A,
     pub r: f32,
+    pub mat: Arc<dyn Material>,
 }
 
 impl Hitable for Sphere {
@@ -67,6 +68,7 @@ impl Hitable for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - self.c) / self.r;
         rec.set_face_normal(r, outward_normal);
+        rec.mat = Some(self.mat.clone());
 
         true
     }

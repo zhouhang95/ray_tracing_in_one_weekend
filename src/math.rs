@@ -2,7 +2,7 @@ use glam::{Vec3A, vec3a};
 use rand::Rng;
 
 pub fn vec3a_near_zero(v: Vec3A) -> bool {
-    let s = 1e-4;
+    let s = 1e-8;
     return (v.x.abs() < s) && (v.y.abs() < s) && (v.z.abs() < s);
 }
 
@@ -39,4 +39,8 @@ impl Ray {
     pub fn at(&self, t: f32) -> Vec3A {
         self.o + self.d * t
     }
+}
+
+pub fn reflect(v: Vec3A, n: Vec3A) -> Vec3A {
+    v - 2.0 * v.dot(n) * n
 }

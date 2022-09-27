@@ -16,6 +16,7 @@ mod hitable;
 use hitable::*;
 
 mod material;
+use material::*;
 
 use rand::Rng;
 
@@ -27,7 +28,13 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     }
     let mut rec = HitRecord::default();
     if world.hit(&r, 1e-4, f32::MAX, &mut rec) {
-        0.5 * ray_color(Ray {o: rec.p, d: random_in_hemisphere(rec.norm).normalize()}, &world, depth-1)
+        let mut scattered = Ray {o: Vec3A::ZERO, d: Vec3A::ZERO};
+        let mut attenuation = Vec3A::ZERO;
+        if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered) {
+            attenuation * ray_color(scattered, &world, depth-1)
+        } else {
+            Vec3A::ZERO
+        }
     } else {
         let t = r.d.y * 0.5 + 0.5;
         Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
@@ -42,9 +49,16 @@ fn main() {
     let ny = 100;
     let aspect_ratio = nx as f32 / ny as f32;
 
+    let material_ground = Arc::new(Lambertian { albedo: vec3a(0.8, 0.8, 0.0)});
+    let material_center = Arc::new(Lambertian { albedo: vec3a(0.7, 0.3, 0.3)});
+    let material_left = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.8)});
+    let material_right = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2)});
+
     let world: HitableList = vec![
-        Arc::new(Sphere {c: vec3a(0.0, 0.0, -1.0), r: 0.5}),
-        Arc::new(Sphere {c: vec3a(0.0, -100.5, -1.0), r: 100.0}),
+        Arc::new(Sphere {c: vec3a( 0.0, -100.5, -1.0), r: 100.0, mat: material_ground}),
+        Arc::new(Sphere {c: vec3a( 0.0, 0.0, -1.0), r: 0.5, mat: material_center}),
+        Arc::new(Sphere {c: vec3a(-1.0, 0.0, -1.0), r: 0.5, mat: material_left}),
+        Arc::new(Sphere {c: vec3a( 1.0, 0.0, -1.0), r: 0.5, mat: material_right}),
     ];
 
     let cam = Camera::new(aspect_ratio);
