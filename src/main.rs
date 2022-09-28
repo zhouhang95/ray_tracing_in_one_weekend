@@ -42,17 +42,17 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
 }
 
 fn main() {
-    let samples_per_pixel = 128;
+    let samples_per_pixel = 512;
     let max_depth = 50;
 
-    let nx = 200;
-    let ny = 100;
+    let nx = 400;
+    let ny = 200;
     let aspect_ratio = nx as f32 / ny as f32;
 
     let material_ground = Arc::new(Lambertian { albedo: vec3a(0.8, 0.8, 0.0)});
     let material_center = Arc::new(Lambertian { albedo: vec3a(0.7, 0.3, 0.3)});
-    let material_left = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.8)});
-    let material_right = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2)});
+    let material_left = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.8), fuzz: 0.3});
+    let material_right = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 1.0});
 
     let world: HitableList = vec![
         Arc::new(Sphere {c: vec3a( 0.0, -100.5, -1.0), r: 100.0, mat: material_ground}),
