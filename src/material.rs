@@ -1,4 +1,5 @@
 use glam::Vec3A;
+use rand::Rng;
 use crate::math::*;
 use crate::hitable::HitRecord;
 
@@ -33,5 +34,27 @@ impl Material for Metal {
         *scattered = Ray {o: rec.p, d: reflected.normalize()};
         *attenuation = self.albedo;
         reflected.dot(rec.norm) > 0.
+    }
+}
+
+pub struct Dielectric {
+    pub ior: f32,
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        *attenuation = Vec3A::ONE;
+        let ref_idx = if rec.front_face { 1.0 / self.ior } else { self.ior };
+        let cos_theta = -r_in.d.dot(rec.norm).min(1.0);
+        let sin_thera = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract =  sin_thera * ref_idx > 1.;
+        let mut rng = rand::thread_rng();
+        let dir = if cannot_refract || reflectance(cos_theta, ref_idx) > rng.gen::<f32>() {
+            reflect(r_in.d, rec.norm)
+        } else {
+            refract(r_in.d, rec.norm, ref_idx)
+        };
+        *scattered = Ray {o: rec.p, d: dir};
+        true
     }
 }

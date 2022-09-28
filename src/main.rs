@@ -50,14 +50,15 @@ fn main() {
     let aspect_ratio = nx as f32 / ny as f32;
 
     let material_ground = Arc::new(Lambertian { albedo: vec3a(0.8, 0.8, 0.0)});
-    let material_center = Arc::new(Lambertian { albedo: vec3a(0.7, 0.3, 0.3)});
-    let material_left = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.8), fuzz: 0.3});
-    let material_right = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 1.0});
+    let material_center = Arc::new(Lambertian { albedo: vec3a(0.1, 0.2, 0.5)});
+    let material_left = Arc::new(Dielectric {ior : 1.5});
+    let material_right = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 0.});
 
     let world: HitableList = vec![
         Arc::new(Sphere {c: vec3a( 0.0, -100.5, -1.0), r: 100.0, mat: material_ground}),
         Arc::new(Sphere {c: vec3a( 0.0, 0.0, -1.0), r: 0.5, mat: material_center}),
-        Arc::new(Sphere {c: vec3a(-1.0, 0.0, -1.0), r: 0.5, mat: material_left}),
+        Arc::new(Sphere {c: vec3a(-1.0, 0.0, -1.0), r: 0.5, mat: material_left.clone()}),
+        Arc::new(Sphere {c: vec3a(-1.0, 0.0, -1.0), r: -0.4, mat: material_left}),
         Arc::new(Sphere {c: vec3a( 1.0, 0.0, -1.0), r: 0.5, mat: material_right}),
     ];
 
