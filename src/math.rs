@@ -2,7 +2,7 @@ use glam::{Vec3A, vec3a};
 use rand::Rng;
 
 pub fn vec3a_near_zero(v: Vec3A) -> bool {
-    let s = 1e-8;
+    let s = f32::EPSILON;
     return (v.x.abs() < s) && (v.y.abs() < s) && (v.z.abs() < s);
 }
 

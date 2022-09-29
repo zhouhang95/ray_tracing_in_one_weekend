@@ -62,7 +62,13 @@ fn main() {
         Arc::new(Sphere {c: vec3a( 1.0, 0.0, -1.0), r: 0.5, mat: material_right}),
     ];
 
-    let cam = Camera::new(aspect_ratio);
+    let cam = Camera::new(
+        vec3a(-2., 2., 1.),
+        vec3a(0., 0., -1.),
+        vec3a(0., 1., 0.),
+        20.,
+        aspect_ratio,
+    );
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     let mut rng = rand::thread_rng();
