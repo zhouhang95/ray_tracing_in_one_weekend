@@ -20,6 +20,7 @@ pub fn random_in_unit_sphere() -> Vec3A {
     }
 }
 
+#[allow(dead_code)]
 pub fn random_in_hemisphere(norm: Vec3A) -> Vec3A {
     let v = random_in_unit_sphere();
     if v.dot(norm) > 0.0 {
