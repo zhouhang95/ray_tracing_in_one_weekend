@@ -18,6 +18,9 @@ use hitable::*;
 mod material;
 use material::*;
 
+mod utils;
+use utils::*;
+
 use rand::Rng;
 
 use chrono::prelude::*;
@@ -69,6 +72,7 @@ fn main() {
         20.,
         aspect_ratio,
     );
+    let t = EZTimer::new();
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     let mut rng = rand::thread_rng();
@@ -91,6 +95,7 @@ fn main() {
             ]));
         }
     }
+    drop(t);
     image::imageops::flip_vertical_in_place(&mut img);
     let local = Local::now().to_rfc3339().replace(":", "-");
     let datetime = local.split_once(".").unwrap().0;
