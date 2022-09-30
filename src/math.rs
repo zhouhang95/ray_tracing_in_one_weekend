@@ -11,9 +11,13 @@ pub fn vec3a_random() -> Vec3A {
     vec3a(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
 }
 
+pub fn vec3a_random_range(min: f32, max: f32) -> Vec3A{
+    vec3a_random() * (max - min) + min
+}
+
 pub fn random_in_unit_sphere() -> Vec3A {
     loop {
-        let v = vec3a_random() * 2.0 - Vec3A::ONE;
+        let v = vec3a_random_range(-1., 1.);
         if v.length_squared() < 1.0 {
             return v;
         }
