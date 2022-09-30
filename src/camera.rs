@@ -2,6 +2,7 @@ use glam::Vec3A;
 
 use crate::math::Ray;
 
+#[derive(Copy, Clone)]
 pub struct Camera {
     origin: Vec3A,
     horizontal: Vec3A,

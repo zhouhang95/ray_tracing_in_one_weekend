@@ -9,6 +9,7 @@ edition = "2021"
 glam = {version = "0.21", features = ["fast-math"]}
 rand = "0.8"
 chrono = "0.4"
+threadpool = "1"
 
 [dependencies.image]
 version = "0.24"

@@ -1,6 +1,7 @@
 #![cfg_attr(debug_assertions, allow(dead_code, unused_imports, unused_variables, unused_mut))]
 
 use std::sync::Arc;
+use std::sync::mpsc::channel;
 
 use image::{ImageBuffer, RgbImage, Rgb};
 use glam::Vec3A;
@@ -94,31 +95,52 @@ fn main() {
     );
     let t = EZTimer::new();
 
-    let mut img: RgbImage = ImageBuffer::new(nx, ny);
-    for j in 0..ny {
-        eprintln!("{}/{}", j, ny);
-        for i in 0..nx {
-            let mut c = Vec3A::ZERO;
-            for _ in 0..samples_per_pixel {
-                let u = (i as f32 + rng.gen::<f32>()) / nx as f32;
-                let v = (j as f32 + rng.gen::<f32>()) / ny as f32;
-                let r = cam.get_ray(u, v);
-                c += ray_color(r, &world, max_depth);
-            }
-            c /= samples_per_pixel as f32;
-            c = c.powf(1.0 / 2.0);
+    let (tx, rx) = channel();
+    let pool = threadpool::Builder::new().build();
 
-            img.put_pixel(i, j, Rgb([
-                (c.x * 255.99) as u8,
-                (c.y * 255.99) as u8,
-                (c.z * 255.99) as u8,
-            ]));
+    let mut img: RgbImage = ImageBuffer::new(nx, ny);
+    for i in 0..nx {
+        let tx = tx.clone();
+        let world = world.clone();
+        pool.execute(move || {
+            let mut rng = rand::thread_rng();
+            for j in 0..ny {
+                let mut c = Vec3A::ZERO;
+                for _ in 0..samples_per_pixel {
+                    let u = (i as f32 + rng.gen::<f32>()) / nx as f32;
+                    let v = (j as f32 + rng.gen::<f32>()) / ny as f32;
+                    let r = cam.get_ray(u, v);
+                    c += ray_color(r, &world, max_depth);
+                }
+                c /= samples_per_pixel as f32;
+                c = c.powf(1.0 / 2.0);
+
+                tx.send((i, j, Rgb([
+                    (c.x * 255.99) as u8,
+                    (c.y * 255.99) as u8,
+                    (c.z * 255.99) as u8,
+                ]))).unwrap();
+            }
+        });
+    }
+    drop(tx);
+    let local = Local::now().to_rfc3339().replace(":", "-");
+    let datetime = local.split_once(".").unwrap().0;
+    let file_name = format!("{}.png", datetime);
+    let mut count = 0;
+    while let Ok((i, j, col)) = rx.recv() {
+        count += 1;
+        if count % nx == 0 {
+            eprintln!("{}/{}", count / nx, ny);
+        }
+        img.put_pixel(i, j, col);
+        if count % (nx * 10) == 0{
+            let mut img = img.clone();
+            image::imageops::flip_vertical_in_place(&mut img);
+            img.save(file_name.clone()).unwrap();
         }
     }
     drop(t);
     image::imageops::flip_vertical_in_place(&mut img);
-    let local = Local::now().to_rfc3339().replace(":", "-");
-    let datetime = local.split_once(".").unwrap().0;
-    let file_name = format!("{}.png", datetime);
     img.save(file_name).unwrap();
 }

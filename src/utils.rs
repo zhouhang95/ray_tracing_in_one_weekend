@@ -14,6 +14,6 @@ impl EZTimer {
 
 impl Drop for EZTimer{
     fn drop(&mut self) {
-        eprintln!("elapsed {} ms", self.start.elapsed().as_millis());
+        eprintln!("elapsed {:.2} s", self.start.elapsed().as_secs_f32());
     }
 }

@@ -3,7 +3,7 @@ use rand::Rng;
 use crate::math::*;
 use crate::hitable::HitRecord;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool;
 }
 
