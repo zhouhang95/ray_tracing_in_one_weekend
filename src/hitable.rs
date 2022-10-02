@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use glam::Vec3A;
 
-use crate::math::Ray;
+use crate::math::*;
 use crate::material::Material;
 
 #[derive(Clone)]
@@ -36,6 +36,7 @@ impl HitRecord {
 
 pub trait Hitable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool;
 }
 
 #[derive(Clone)]
@@ -72,6 +73,12 @@ impl Hitable for Sphere {
 
         true
     }
+
+    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool {
+        aabb.min = self.c - self.r;
+        aabb.max = self.c + self.r;
+        true
+    }
 }
 
 pub type HitableList = Vec<Arc<dyn Hitable>>;
@@ -92,5 +99,46 @@ impl Hitable for HitableList {
             *rec = temp_rec;
         }
         hit_anything
+    }
+    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool {
+        if self.is_empty() {
+            return false;
+        }
+        let mut bbox = AABB::default();
+        let mut first = true;
+        for o in self {
+            if o.bbox(t_0, t_1, &mut bbox) {
+                if first {
+                    *aabb = bbox;
+                    first = false;
+                } else {
+                    *aabb = aabb.surround(bbox);
+                }
+            } else {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+pub struct BvhNode {
+    aabb: AABB,
+    left: Arc<dyn Hitable>,
+    right: Arc<dyn Hitable>,
+}
+
+impl Hitable for BvhNode {
+    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool {
+        *aabb = self.aabb;
+        true
+    }
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        if self.aabb.hit(r, t_min, t_max) == false {
+            return false;
+        }
+        let hit_left = self.left.hit(r, t_min, t_max, rec);
+        let hit_right = self.left.hit(r, t_min, if hit_left {rec.t} else {t_max}, rec);
+        hit_left || hit_right
     }
 }

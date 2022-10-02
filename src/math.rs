@@ -63,3 +63,46 @@ pub fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
     let r0 = r0 * r0;
     r0 + (1.-r0) * (1. - cosine).powi(5)
 }
+
+#[derive(Default, Debug, Clone, Copy)]
+pub struct AABB {
+    pub min: Vec3A,
+    pub max: Vec3A,
+}
+
+impl AABB {
+    pub fn hit(&self, r: &Ray, mut t_min: f32, mut t_max: f32) -> bool {
+        for i in 0..3 {
+            let inv_d = 1.0 / r.d[i];
+            let mut t0 = (self.min[i] - r.o[i]) * inv_d;
+            let mut t1 = (self.max[i] - r.o[i]) * inv_d;
+            if inv_d < 0. {
+                std::mem::swap(&mut t0, &mut t1);
+            }
+            t_min = t_min.max(t0);
+            t_max = t_max.min(t1);
+            // todo: maybe "<=" to "<""
+            if t_max <= t_min {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn surround(&self, rhs: Self) -> Self {
+        let min = vec3a(
+            self.min.x.min(rhs.min.x),
+            self.min.y.min(rhs.min.y),
+            self.min.z.min(rhs.min.z),
+        );
+        let max = vec3a(
+            self.max.x.max(rhs.max.x),
+            self.max.y.max(rhs.max.y),
+            self.max.z.max(rhs.max.z),
+        );
+        Self {
+            min,
+            max,
+        }
+    }
+}
