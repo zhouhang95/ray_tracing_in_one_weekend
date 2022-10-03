@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use glam::Vec3A;
+use rand::Rng;
 
 use crate::math::*;
 use crate::material::Material;
@@ -128,6 +129,52 @@ pub struct BvhNode {
     right: Arc<dyn Hitable>,
 }
 
+fn box_compare(a: Arc<dyn Hitable>, b: Arc<dyn Hitable>, axis: usize) -> bool {
+    let mut box_a = AABB::default();
+    let mut box_b = AABB::default();
+
+    let a_result = a.bbox(0., 0., &mut box_a);
+    let b_result = b.bbox(0., 0., &mut box_b);
+    if a_result == false && b_result == false {
+        eprintln!("No bounding box in bvh_node constructor.");
+    }
+
+    box_a.min[axis] < box_b.min[axis]
+}
+
+impl BvhNode {
+    pub fn new(
+        objects: &HitableList,
+        start: usize,
+        end: usize,
+        t0: f32,
+        t1: f32,
+    ) -> Self {
+        let mut rng = rand::thread_rng();
+
+        let axis: usize = rng.gen_range(0..3);
+        let object_span = end - start;
+        let (left, right) = match object_span {
+            0 => unimplemented!(),
+            1 => (objects[start].clone(), objects[start].clone()),
+            v => {
+                todo!()
+            },
+        };
+
+        let mut box_a = AABB::default();
+        let mut box_b = AABB::default();
+
+        let a_result = left.bbox(0., 0., &mut box_a);
+        let b_result = right.bbox(0., 0., &mut box_b);
+        if a_result == false && b_result == false {
+            eprintln!("No bounding box in bvh_node constructor.");
+        }
+        let aabb = box_a.surround(box_b);
+
+        Self { aabb, left, right }
+    }
+}
 impl Hitable for BvhNode {
     fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool {
         *aabb = self.aabb;
