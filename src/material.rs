@@ -12,12 +12,12 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let mut scatter_direction = rec.norm + random_in_unit_sphere().normalize();
         if vec3a_near_zero(scatter_direction) {
             scatter_direction = rec.norm;
         }
-        *scattered = Ray {o: rec.p, d: scatter_direction.normalize()};
+        *scattered = Ray {o: rec.p, d: scatter_direction.normalize(), s: r_in.s};
         *attenuation = self.albedo;
         true
     }
@@ -31,7 +31,7 @@ pub struct Metal {
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let reflected = reflect(r_in.d, rec.norm) + self.fuzz * random_in_unit_sphere();
-        *scattered = Ray {o: rec.p, d: reflected.normalize()};
+        *scattered = Ray {o: rec.p, d: reflected.normalize(), s: r_in.s};
         *attenuation = self.albedo;
         reflected.dot(rec.norm) > 0.
     }
@@ -54,7 +54,7 @@ impl Material for Dielectric {
         } else {
             refract(r_in.d, rec.norm, ref_idx)
         };
-        *scattered = Ray {o: rec.p, d: dir};
+        *scattered = Ray {o: rec.p, d: dir, s: r_in.s};
         true
     }
 }

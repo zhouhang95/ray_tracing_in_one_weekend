@@ -37,7 +37,8 @@ impl HitRecord {
 
 pub trait Hitable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
-    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool;
+    fn bbox(&self, aabb: &mut AABB) -> bool;
+    fn memo(&self) -> String;
 }
 
 #[derive(Clone)]
@@ -45,6 +46,7 @@ pub struct Sphere {
     pub c: Vec3A,
     pub r: f32,
     pub mat: Arc<dyn Material>,
+    pub name: String,
 }
 
 impl Hitable for Sphere {
@@ -75,10 +77,13 @@ impl Hitable for Sphere {
         true
     }
 
-    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool {
+    fn bbox(&self, aabb: &mut AABB) -> bool {
         aabb.min = self.c - self.r;
         aabb.max = self.c + self.r;
         true
+    }
+    fn memo(&self) -> String {
+        self.name.clone()
     }
 }
 
@@ -101,14 +106,14 @@ impl Hitable for HitableList {
         }
         hit_anything
     }
-    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool {
+    fn bbox(&self, aabb: &mut AABB) -> bool {
         if self.is_empty() {
             return false;
         }
         let mut bbox = AABB::default();
         let mut first = true;
         for o in self {
-            if o.bbox(t_0, t_1, &mut bbox) {
+            if o.bbox(&mut bbox) {
                 if first {
                     *aabb = bbox;
                     first = false;
@@ -121,6 +126,9 @@ impl Hitable for HitableList {
         }
         true
     }
+    fn memo(&self) -> String {
+        "HitableList".to_string()
+    }
 }
 
 pub struct BvhNode {
@@ -129,26 +137,23 @@ pub struct BvhNode {
     right: Arc<dyn Hitable>,
 }
 
-fn box_compare(a: Arc<dyn Hitable>, b: Arc<dyn Hitable>, axis: usize) -> bool {
+fn box_compare(a: &Arc<dyn Hitable>, b: &Arc<dyn Hitable>, axis: usize) -> std::cmp::Ordering {
     let mut box_a = AABB::default();
     let mut box_b = AABB::default();
 
-    let a_result = a.bbox(0., 0., &mut box_a);
-    let b_result = b.bbox(0., 0., &mut box_b);
+    let a_result = a.bbox(&mut box_a);
+    let b_result = b.bbox(&mut box_b);
     if a_result == false && b_result == false {
         eprintln!("No bounding box in bvh_node constructor.");
     }
-
-    box_a.min[axis] < box_b.min[axis]
+    box_a.min[axis].total_cmp(&box_b.min[axis])
 }
 
 impl BvhNode {
     pub fn new(
-        objects: &HitableList,
+        objects: &mut HitableList,
         start: usize,
         end: usize,
-        t0: f32,
-        t1: f32,
     ) -> Self {
         let mut rng = rand::thread_rng();
 
@@ -158,15 +163,31 @@ impl BvhNode {
             0 => unimplemented!(),
             1 => (objects[start].clone(), objects[start].clone()),
             v => {
-                todo!()
+                objects[start..end].sort_by(|a, b| box_compare(a, b, axis));
+                if v == 2 {
+                    (objects[start].clone(), objects[start+1].clone())
+                } else {
+                    let mid = start + v / 2;
+                    let left: Arc<dyn Hitable> = Arc::new(BvhNode::new(
+                        objects,
+                        start,
+                        mid,
+                    ));
+                    let right: Arc<dyn Hitable> = Arc::new(BvhNode::new(
+                        objects,
+                        mid,
+                        end,
+                    ));
+                    (left, right)
+                }
             },
         };
 
         let mut box_a = AABB::default();
         let mut box_b = AABB::default();
 
-        let a_result = left.bbox(0., 0., &mut box_a);
-        let b_result = right.bbox(0., 0., &mut box_b);
+        let a_result = left.bbox(&mut box_a);
+        let b_result = right.bbox(&mut box_b);
         if a_result == false && b_result == false {
             eprintln!("No bounding box in bvh_node constructor.");
         }
@@ -175,8 +196,12 @@ impl BvhNode {
         Self { aabb, left, right }
     }
 }
+
 impl Hitable for BvhNode {
-    fn bbox(&self, t_0: f32, t_1: f32, aabb: &mut AABB) -> bool {
+    fn memo(&self) -> String {
+        "BvhNode".to_string()
+    }
+    fn bbox(&self, aabb: &mut AABB) -> bool {
         *aabb = self.aabb;
         true
     }
@@ -185,7 +210,8 @@ impl Hitable for BvhNode {
             return false;
         }
         let hit_left = self.left.hit(r, t_min, t_max, rec);
-        let hit_right = self.left.hit(r, t_min, if hit_left {rec.t} else {t_max}, rec);
+        let hit_right = self.right.hit(r, t_min, if hit_left {rec.t} else {t_max}, rec);
+        // eprintln!("{}, {}: {}, {}",(r.s[0] * 400.) as i32,  (r.s[1] * 200.) as i32, hit_left, hit_right);
         hit_left || hit_right
     }
 }

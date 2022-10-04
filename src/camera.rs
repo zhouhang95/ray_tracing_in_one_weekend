@@ -1,4 +1,4 @@
-use glam::Vec3A;
+use glam::*;
 
 use crate::math::Ray;
 
@@ -41,6 +41,7 @@ impl Camera {
         Ray{
             o: self.origin,
             d: (self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin).normalize(),
+            s: vec2(u, v),
         }
     }
 }

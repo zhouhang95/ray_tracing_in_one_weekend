@@ -32,7 +32,7 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     }
     let mut rec = HitRecord::default();
     if world.hit(&r, 1e-3, f32::MAX, &mut rec) {
-        let mut scattered = Ray {o: Vec3A::ZERO, d: Vec3A::ZERO};
+        let mut scattered = Ray {o: Vec3A::ZERO, d: Vec3A::ZERO, s: r.s};
         let mut attenuation = Vec3A::ZERO;
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered) {
             attenuation * ray_color(scattered, &world, depth-1)
@@ -59,10 +59,10 @@ fn main() {
     let material_3 = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 0.});
 
     let mut world: HitableList = vec![
-        Arc::new(Sphere {c: vec3a( 0.0, -1000., -1.0), r: 1000.0, mat: material_ground}),
-        Arc::new(Sphere {c: vec3a( 0.0, 1.0, 0.0), r: 1., mat: material_1}),
-        Arc::new(Sphere {c: vec3a(-4.0, 1.0, 0.0), r: 1., mat: material_2.clone()}),
-        Arc::new(Sphere {c: vec3a( 4.0, 1.0, 0.0), r: 1., mat: material_3}),
+        Arc::new(Sphere {c: vec3a( 1.0, -1000., -1.0), r: 1000.0, mat: material_ground, name: "Ground".to_string()}),
+        Arc::new(Sphere {c: vec3a( 0.0, 1.0, 3.0), r: 1., mat: material_1, name: "Sphere_1".to_string()}),
+        Arc::new(Sphere {c: vec3a(-4.0, 1.0, 0.0), r: 1., mat: material_2.clone(), name: "Sphere_2".to_string()}),
+        Arc::new(Sphere {c: vec3a( 4.0, 1.0, 0.0), r: 1., mat: material_3, name: "Sphere_3".to_string()}),
     ];
 
     let mut rng = rand::thread_rng();
@@ -81,10 +81,15 @@ fn main() {
             } else {
                 material_2.clone()
             };
-            world.push(Arc::new(Sphere {c: center, r: 0.2, mat}));
-
+            world.push(Arc::new(Sphere {c: center, r: 0.2, mat, name: format!("Sphere {}, {}", a, b)}));
         }
     }
+
+    let world_len = world.len();
+
+    let bvh: Arc<dyn Hitable> = Arc::new(BvhNode::new(&mut world, 0, world_len));
+
+    let world = vec![bvh];
 
     let cam = Camera::new(
         vec3a(13., 2., 3.),
@@ -97,6 +102,7 @@ fn main() {
 
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
+    // let pool = threadpool::ThreadPool::new(1);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {
@@ -130,7 +136,7 @@ fn main() {
     let mut count = 0;
     while let Ok((i, j, col)) = rx.recv() {
         count += 1;
-        if count % nx == 0 {
+        if count % (nx * 10) == 0 {
             eprintln!("{}/{}", count / nx, ny);
         }
         img.put_pixel(i, j, col);

@@ -1,4 +1,4 @@
-use glam::{Vec3A, vec3a};
+use glam::*;
 use rand::Rng;
 
 pub fn vec3a_near_zero(v: Vec3A) -> bool {
@@ -38,6 +38,7 @@ pub fn random_in_hemisphere(norm: Vec3A) -> Vec3A {
 pub struct Ray {
     pub o: Vec3A,
     pub d: Vec3A,
+    pub s: Vec2,
 }
 
 impl Ray {
