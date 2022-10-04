@@ -22,6 +22,9 @@ use material::*;
 mod utils;
 use utils::*;
 
+mod texture;
+use texture::*;
+
 use rand::Rng;
 
 use chrono::prelude::*;
@@ -49,12 +52,14 @@ fn main() {
     let samples_per_pixel = 32;
     let max_depth = 50;
 
-    let nx = 400;
-    let ny = 200;
+    let nx = 800;
+    let ny = 400;
     let aspect_ratio = nx as f32 / ny as f32;
 
-    let material_ground = Arc::new(Lambertian { albedo: vec3a(0.5, 0.5, 0.5)});
-    let material_1 = Arc::new(Lambertian { albedo: vec3a(0.1, 0.2, 0.5)});
+    let checker = Arc::new(CheckerTex::new(vec3a(0.2, 0.3, 0.1), vec3a(0.9, 0.9, 0.9)));
+
+    let material_ground = Arc::new(Lambertian { albedo: checker});
+    let material_1 = Arc::new(Lambertian { albedo: Arc::new(ConstantTex {col: vec3a(0.1, 0.2, 0.5)})});
     let material_2 = Arc::new(Dielectric {ior : 1.5});
     let material_3 = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 0.});
 
@@ -72,8 +77,9 @@ fn main() {
             let choose_mat = rng.gen::<f32>();
             let center = vec3a(a as f32 + 0.9*rng.gen::<f32>(), 0.2, b as f32 + 0.9*rng.gen::<f32>());
             let mat: Arc<dyn Material> = if choose_mat < 0.8 {
-                let albedo = vec3a_random() * vec3a_random();
-                Arc::new(Lambertian { albedo})
+                let col =  vec3a_random() * vec3a_random();
+                let albedo = Arc::new(ConstantTex {col});
+                Arc::new(Lambertian {albedo})
             } else if choose_mat < 0.95 {
                 let albedo = vec3a_random_range(0.5, 1.);
                 let fuzz = rng.gen::<f32>();

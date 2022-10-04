@@ -1,30 +1,23 @@
+use std::f32::consts::PI;
 use std::sync::Arc;
 
-use glam::Vec3A;
+use glam::*;
 use rand::Rng;
 
 use crate::math::*;
 use crate::material::Material;
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct HitRecord {
     pub p: Vec3A,
     pub norm: Vec3A,
     pub t: f32,
     pub front_face: bool,
     pub mat: Option<Arc<dyn Material>>,
+    pub uv: Vec2,
 }
 
 impl HitRecord {
-    pub fn default() -> Self {
-        Self {
-            p: Vec3A::ZERO,
-            norm: Vec3A::ZERO,
-            t: 0.0,
-            front_face: true,
-            mat: None,
-        }
-    }
     fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3A) {
         self.front_face = r.d.dot(outward_normal) < 0.0;
         self.norm = if self.front_face {
@@ -47,6 +40,16 @@ pub struct Sphere {
     pub r: f32,
     pub mat: Arc<dyn Material>,
     pub name: String,
+}
+
+impl Sphere {
+    pub fn get_uv(p: Vec3A) -> Vec2 {
+        let theta = -p.y.acos();
+        let phi = (-p.z).atan2(p.x) + PI;
+        let u = phi / (2. * PI);
+        let v = theta / PI;
+        vec2(u, v)
+    }
 }
 
 impl Hitable for Sphere {
@@ -72,6 +75,7 @@ impl Hitable for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - self.c) / self.r;
         rec.set_face_normal(r, outward_normal);
+        rec.uv = Sphere::get_uv(rec.p);
         rec.mat = Some(self.mat.clone());
 
         true

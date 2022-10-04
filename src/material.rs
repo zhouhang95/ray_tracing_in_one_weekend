@@ -1,14 +1,17 @@
+use std::sync::Arc;
+
 use glam::Vec3A;
 use rand::Rng;
 use crate::math::*;
 use crate::hitable::HitRecord;
+use crate::texture::Texture;
 
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool;
 }
 
 pub struct Lambertian {
-    pub albedo: Vec3A,
+    pub albedo: Arc<dyn Texture>,
 }
 
 impl Material for Lambertian {
@@ -18,7 +21,7 @@ impl Material for Lambertian {
             scatter_direction = rec.norm;
         }
         *scattered = Ray {o: rec.p, d: scatter_direction.normalize(), s: r_in.s};
-        *attenuation = self.albedo;
+        *attenuation = self.albedo.value(rec.uv, rec.p);
         true
     }
 }
