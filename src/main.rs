@@ -25,7 +25,8 @@ use utils::*;
 mod texture;
 use texture::*;
 
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+use rand::rngs::StdRng;
 
 use chrono::prelude::*;
 
@@ -70,18 +71,20 @@ fn main() {
         Arc::new(Sphere {c: vec3a( 4.0, 1.0, 0.0), r: 1., mat: material_3, name: "Sphere_3".to_string()}),
     ];
 
-    let mut rng = rand::thread_rng();
+    let mut rng = StdRng::seed_from_u64(95);
 
     for a in -11..=11 {
         for b in -11..=11 {
             let choose_mat = rng.gen::<f32>();
             let center = vec3a(a as f32 + 0.9*rng.gen::<f32>(), 0.2, b as f32 + 0.9*rng.gen::<f32>());
             let mat: Arc<dyn Material> = if choose_mat < 0.8 {
-                let col =  vec3a_random() * vec3a_random();
+                let a = vec3a(rng.gen(), rng.gen(), rng.gen());
+                let b = vec3a(rng.gen(), rng.gen(), rng.gen());
+                let col =  a * b;
                 let albedo = Arc::new(ConstantTex {col});
                 Arc::new(Lambertian {albedo})
             } else if choose_mat < 0.95 {
-                let albedo = vec3a_random_range(0.5, 1.);
+                let albedo = vec3a(rng.gen(), rng.gen(), rng.gen()) * 0.5 + 0.5;
                 let fuzz = rng.gen::<f32>();
                 Arc::new(Metal {albedo, fuzz})
             } else {
