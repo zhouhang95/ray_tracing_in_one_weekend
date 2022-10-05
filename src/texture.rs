@@ -126,13 +126,23 @@ impl Perlin {
     }
 }
 
-#[derive(Default)]
 pub struct PerlinTex {
     perlin: Perlin,
+    scale: f32,
+}
+
+
+impl PerlinTex {
+    pub fn new(scale: f32) -> Self {
+        Self {
+            scale,
+            perlin: Perlin::default(),
+        }
+    }
 }
 
 impl Texture for PerlinTex {
     fn value(&self, _uv: Vec2, p: Vec3A) -> Vec3A {
-        self.perlin.noise(p) * Vec3A::ONE
+        self.perlin.noise(p * self.scale) * Vec3A::ONE
     }
 }

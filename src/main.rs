@@ -58,7 +58,7 @@ fn main() {
     let aspect_ratio = nx as f32 / ny as f32;
 
     // let checker = Arc::new(CheckerTex::new(vec3a(0.2, 0.3, 0.1), vec3a(0.9, 0.9, 0.9)));
-    let perlin = Arc::new(PerlinTex::default());
+    let perlin = Arc::new(PerlinTex::new(4.));
 
     let material_ground = Arc::new(Lambertian { albedo: perlin});
     let material_1 = Arc::new(Lambertian { albedo: Arc::new(ConstantTex {col: vec3a(0.1, 0.2, 0.5)})});
