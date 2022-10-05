@@ -162,13 +162,13 @@ impl Texture for PerlinTex {
 }
 
 pub struct ImageTex {
-    img: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    img: ImageBuffer<Rgb<f32>, Vec<f32>>,
 }
 
 impl ImageTex {
     pub fn new(path: String) -> Self {
         let img = image::open(path).unwrap();
-        let img = img.to_rgb8();
+        let img = img.to_rgb32f();
         Self {
             img,
         }
@@ -182,6 +182,6 @@ impl Texture for ImageTex {
         let i = ((u * self.img.width() as f32) as u32).clamp(0, self.img.width()-1);
         let j = ((v * self.img.height() as f32) as u32).clamp(0, self.img.height()-1);
         let rgb = self.img.get_pixel(i, j);
-        vec3a(rgb[0] as f32, rgb[1] as f32, rgb[2] as f32) / 255.
+        vec3a(rgb[0], rgb[1], rgb[2])
     }
 }
