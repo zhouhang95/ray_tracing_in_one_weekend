@@ -57,9 +57,10 @@ fn main() {
     let ny = 400;
     let aspect_ratio = nx as f32 / ny as f32;
 
-    let checker = Arc::new(CheckerTex::new(vec3a(0.2, 0.3, 0.1), vec3a(0.9, 0.9, 0.9)));
+    // let checker = Arc::new(CheckerTex::new(vec3a(0.2, 0.3, 0.1), vec3a(0.9, 0.9, 0.9)));
+    let perlin = Arc::new(PerlinTex::default());
 
-    let material_ground = Arc::new(Lambertian { albedo: checker});
+    let material_ground = Arc::new(Lambertian { albedo: perlin});
     let material_1 = Arc::new(Lambertian { albedo: Arc::new(ConstantTex {col: vec3a(0.1, 0.2, 0.5)})});
     let material_2 = Arc::new(Dielectric {ior : 1.5});
     let material_3 = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 0.});
