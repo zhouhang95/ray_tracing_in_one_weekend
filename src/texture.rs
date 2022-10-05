@@ -156,7 +156,6 @@ impl PerlinTex {
 
 impl Texture for PerlinTex {
     fn value(&self, _uv: Vec2, p: Vec3A) -> Vec3A {
-        // (self.perlin.noise(p * self.scale) + 1.) * 0.5 * Vec3A::ONE
-        self.perlin.turb(p * self.scale) * Vec3A::ONE
+        ((10. * self.perlin.turb(p) + self.scale * p.z).sin() + 1.) * 0.5 * Vec3A::ONE
     }
 }
