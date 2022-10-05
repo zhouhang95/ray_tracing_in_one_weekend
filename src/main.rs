@@ -43,10 +43,11 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     if world.hit(&r, 1e-3, f32::MAX, &mut rec) {
         let mut scattered = Ray {o: Vec3A::ZERO, d: Vec3A::ZERO, s: r.s};
         let mut attenuation = Vec3A::ZERO;
+        let emit = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered) {
-            attenuation * ray_color(scattered, &world, depth-1)
+            emit + attenuation * ray_color(scattered, &world, depth-1)
         } else {
-            rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p)
+            emit
         }
     } else {
         sky_color(r.d)
