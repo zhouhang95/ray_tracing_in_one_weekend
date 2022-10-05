@@ -30,9 +30,14 @@ use rand::rngs::StdRng;
 
 use chrono::prelude::*;
 
+fn sky_color(d: Vec3A) -> Vec3A {
+    let t = d.y * 0.5 + 0.5;
+    Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
+}
+
 fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     if depth <= 0 {
-        return vec3a(0.0, 0.0, 0.0);
+        return Vec3A::ZERO;
     }
     let mut rec = HitRecord::default();
     if world.hit(&r, 1e-3, f32::MAX, &mut rec) {
@@ -41,11 +46,10 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered) {
             attenuation * ray_color(scattered, &world, depth-1)
         } else {
-            Vec3A::ZERO
+            rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p)
         }
     } else {
-        let t = r.d.y * 0.5 + 0.5;
-        Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
+        sky_color(r.d)
     }
 }
 
@@ -62,7 +66,7 @@ fn main() {
     let earth_map = Arc::new(ImageTex::new("res/earthmap.jpg".into()));
 
     let material_ground = Arc::new(Lambertian { albedo: perlin});
-    let material_1 = Arc::new(Lambertian { albedo: earth_map});
+    let material_1 = Arc::new(Emission { emit: earth_map});
     let material_2 = Arc::new(Dielectric {ior : 1.5});
     let material_3 = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 0.});
 

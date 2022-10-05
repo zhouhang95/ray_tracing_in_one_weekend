@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use glam::Vec3A;
+use glam::*;
 use rand::Rng;
 use crate::math::*;
 use crate::hitable::HitRecord;
@@ -8,6 +8,23 @@ use crate::texture::Texture;
 
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool;
+    fn emitted(&self, _uv: Vec2, _p: Vec3A) -> Vec3A {
+        Vec3A::ZERO
+    }
+}
+
+pub struct Emission {
+    pub emit: Arc<dyn Texture>,
+}
+
+impl Material for Emission {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _attenuation: &mut Vec3A, _scattered: &mut Ray) -> bool {
+        false
+    }
+
+    fn emitted(&self, uv: Vec2, p: Vec3A) -> Vec3A {
+        self.emit.value(uv, p)
+    }
 }
 
 pub struct Lambertian {
