@@ -43,9 +43,9 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn get_uv(p: Vec3A) -> Vec2 {
-        let theta = -p.y.acos();
-        let phi = (-p.z).atan2(p.x) + PI;
+    pub fn get_uv(n: Vec3A) -> Vec2 {
+        let theta = (-n.y).acos();
+        let phi = (-n.z).atan2(n.x) + PI;
         let u = phi / (2. * PI);
         let v = theta / PI;
         vec2(u, v)
@@ -75,7 +75,7 @@ impl Hitable for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - self.c) / self.r;
         rec.set_face_normal(r, outward_normal);
-        rec.uv = Sphere::get_uv(rec.p);
+        rec.uv = Sphere::get_uv(outward_normal);
         rec.mat = Some(self.mat.clone());
 
         true

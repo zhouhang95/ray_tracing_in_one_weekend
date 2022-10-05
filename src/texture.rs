@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use glam::*;
 
+use image::*;
 use rand::seq::SliceRandom;
 
 use crate::math::vec3a_random_range;
@@ -157,5 +158,30 @@ impl PerlinTex {
 impl Texture for PerlinTex {
     fn value(&self, _uv: Vec2, p: Vec3A) -> Vec3A {
         ((10. * self.perlin.turb(p) + self.scale * p.z).sin() + 1.) * 0.5 * Vec3A::ONE
+    }
+}
+
+pub struct ImageTex {
+    img: ImageBuffer<Rgb<u8>, Vec<u8>>,
+}
+
+impl ImageTex {
+    pub fn new(path: String) -> Self {
+        let img = image::open(path).unwrap();
+        let img = img.to_rgb8();
+        Self {
+            img,
+        }
+    }
+}
+
+impl Texture for ImageTex {
+    fn value(&self, uv: Vec2, _p: Vec3A) -> Vec3A {
+        let u = uv.x.clamp(0., 1.);
+        let v = 1. - uv.y.clamp(0., 1.);
+        let i = ((u * self.img.width() as f32) as u32).clamp(0, self.img.width()-1);
+        let j = ((v * self.img.height() as f32) as u32).clamp(0, self.img.height()-1);
+        let rgb = self.img.get_pixel(i, j);
+        vec3a(rgb[0] as f32, rgb[1] as f32, rgb[2] as f32) / 255.
     }
 }
