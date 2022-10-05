@@ -105,6 +105,16 @@ fn trilinear_interp(c: &[[[Vec3A;2];2];2], uvw: Vec3A) -> f32 {
 }
 
 impl Perlin {
+    pub fn turb(&self, mut p: Vec3A) -> f32 {
+        let mut accum = 0.;
+        let mut w = 1.;
+        for _ in 0..7 {
+            accum += w * self.noise(p);
+            p *= 2.;
+            w *= 0.5;
+        }
+        accum.abs()
+    }
     pub fn noise(&self, p: Vec3A) -> f32 {
         let i = p.x.floor() as isize;
         let j = p.y.floor() as isize;
@@ -146,6 +156,7 @@ impl PerlinTex {
 
 impl Texture for PerlinTex {
     fn value(&self, _uv: Vec2, p: Vec3A) -> Vec3A {
-        (self.perlin.noise(p * self.scale) + 1.) * 0.5 * Vec3A::ONE
+        // (self.perlin.noise(p * self.scale) + 1.) * 0.5 * Vec3A::ONE
+        self.perlin.turb(p * self.scale) * Vec3A::ONE
     }
 }
