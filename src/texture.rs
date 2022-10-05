@@ -82,15 +82,47 @@ impl Default for Perlin {
     }
 }
 
+fn trilinear_interp(c: &[[[f32;2];2];2], uvw: Vec3A) -> f32 {
+    let mut accum = 0.;
+    let u = uvw.x;
+    let v = uvw.y;
+    let w = uvw.z;
+    for i in 0..2 {
+        for j in 0..2 {
+            for k in 0..2 {
+                accum += c[i][j][k]
+                    * if i == 1 {u} else {1.-u}
+                    * if j == 1 {v} else {1.-v}
+                    * if k == 1 {w} else {1.-w};
+            }
+        }
+    }
+    accum
+}
+
 impl Perlin {
     pub fn noise(&self, p: Vec3A) -> f32 {
-        let p = p * 4.;
-        let i = p.x.rem_euclid(PERLIN_POINT_COUNT as f32) as usize % PERLIN_POINT_COUNT;
-        let j = p.y.rem_euclid(PERLIN_POINT_COUNT as f32) as usize % PERLIN_POINT_COUNT;
-        let k = p.z.rem_euclid(PERLIN_POINT_COUNT as f32) as usize % PERLIN_POINT_COUNT;
-        let index = self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k];
+        let i = p.x.floor() as isize;
+        let j = p.y.floor() as isize;
+        let k = p.z.floor() as isize;
 
-        self.ranfloat[index]
+        let mut c = [[[0f32;2];2];2];
+
+        for di in 0..2 {
+            for dj in 0..2 {
+                for dk in 0..2 {
+                    let index =
+                        self.perm_x[((i + di).rem_euclid(PERLIN_POINT_COUNT as isize)) as usize] ^
+                        self.perm_y[((j + dj).rem_euclid(PERLIN_POINT_COUNT as isize)) as usize] ^
+                        self.perm_z[((k + dk).rem_euclid(PERLIN_POINT_COUNT as isize)) as usize];
+                    
+                    c[di as usize][dj as usize][dk as usize] = self.ranfloat[index];
+                }
+            }
+        }
+        let uvw = p - p.floor();
+        let uvw = crate::math::smooth(uvw);
+        trilinear_interp(&c, uvw)
     }
 }
 

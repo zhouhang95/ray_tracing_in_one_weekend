@@ -107,3 +107,7 @@ impl AABB {
         }
     }
 }
+
+pub fn smooth(v: Vec3A) -> Vec3A {
+    v * v * (3. - 2. * v)
+}
