@@ -84,10 +84,10 @@ impl Default for Perlin {
 
 impl Perlin {
     pub fn noise(&self, p: Vec3A) -> f32 {
-        let p = p.abs() * 4.;
-        let i = p.x as usize & 255;
-        let j = p.y as usize & 255;
-        let k = p.z as usize & 255;
+        let p = p * 4.;
+        let i = p.x.rem_euclid(PERLIN_POINT_COUNT as f32) as usize % PERLIN_POINT_COUNT;
+        let j = p.y.rem_euclid(PERLIN_POINT_COUNT as f32) as usize % PERLIN_POINT_COUNT;
+        let k = p.z.rem_euclid(PERLIN_POINT_COUNT as f32) as usize % PERLIN_POINT_COUNT;
         let index = self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k];
 
         self.ranfloat[index]
