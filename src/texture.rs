@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 use glam::*;
 
-use rand::Rng;
 use rand::seq::SliceRandom;
+
+use crate::math::vec3a_random_range;
 
 pub trait Texture: Send + Sync {
     fn value(&self, uv: Vec2, p: Vec3A) -> Vec3A;
@@ -48,7 +49,7 @@ impl Texture for CheckerTex {
 const PERLIN_POINT_COUNT: usize = 256;
 
 struct Perlin {
-    ranfloat: Vec<f32>,
+    rand_vec: Vec<Vec3A>,
     perm_x: Vec<usize>,
     perm_y: Vec<usize>,
     perm_z: Vec<usize>,
@@ -57,9 +58,9 @@ struct Perlin {
 impl Default for Perlin {
     fn default() -> Self {
         let mut rng = rand::thread_rng();
-        let mut ranfloat = vec![0.0f32; PERLIN_POINT_COUNT];
-        for v in &mut ranfloat {
-            *v = rng.gen();
+        let mut rand_vec = vec![Vec3A::ZERO; PERLIN_POINT_COUNT];
+        for v in &mut rand_vec {
+            *v = vec3a_random_range(-1., 1.);
         }
 
         let mut p = vec![0usize; PERLIN_POINT_COUNT];
@@ -74,7 +75,7 @@ impl Default for Perlin {
         let perm_z = p.clone();
 
         Self {
-            ranfloat,
+            rand_vec,
             perm_x,
             perm_y,
             perm_z,
@@ -82,15 +83,18 @@ impl Default for Perlin {
     }
 }
 
-fn trilinear_interp(c: &[[[f32;2];2];2], uvw: Vec3A) -> f32 {
+fn trilinear_interp(c: &[[[Vec3A;2];2];2], uvw: Vec3A) -> f32 {
     let mut accum = 0.;
-    let u = uvw.x;
-    let v = uvw.y;
-    let w = uvw.z;
+    let uvw2 = crate::math::smooth(uvw);
+
+    let u = uvw2.x;
+    let v = uvw2.y;
+    let w = uvw2.z;
     for i in 0..2 {
         for j in 0..2 {
             for k in 0..2 {
-                accum += c[i][j][k]
+                let weight = uvw - vec3a(i as f32, j as f32, k as f32);
+                accum += c[i][j][k].dot(weight)
                     * if i == 1 {u} else {1.-u}
                     * if j == 1 {v} else {1.-v}
                     * if k == 1 {w} else {1.-w};
@@ -106,7 +110,7 @@ impl Perlin {
         let j = p.y.floor() as isize;
         let k = p.z.floor() as isize;
 
-        let mut c = [[[0f32;2];2];2];
+        let mut c = [[[Vec3A::ZERO;2];2];2];
 
         for di in 0..2 {
             for dj in 0..2 {
@@ -116,12 +120,11 @@ impl Perlin {
                         self.perm_y[((j + dj).rem_euclid(PERLIN_POINT_COUNT as isize)) as usize] ^
                         self.perm_z[((k + dk).rem_euclid(PERLIN_POINT_COUNT as isize)) as usize];
                     
-                    c[di as usize][dj as usize][dk as usize] = self.ranfloat[index];
+                    c[di as usize][dj as usize][dk as usize] = self.rand_vec[index];
                 }
             }
         }
         let uvw = p - p.floor();
-        let uvw = crate::math::smooth(uvw);
         trilinear_interp(&c, uvw)
     }
 }
@@ -143,6 +146,6 @@ impl PerlinTex {
 
 impl Texture for PerlinTex {
     fn value(&self, _uv: Vec2, p: Vec3A) -> Vec3A {
-        self.perlin.noise(p * self.scale) * Vec3A::ONE
+        (self.perlin.noise(p * self.scale) + 1.) * 0.5 * Vec3A::ONE
     }
 }
