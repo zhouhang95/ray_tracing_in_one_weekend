@@ -70,7 +70,7 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
 
 fn main() {
     ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
-    let samples_per_pixel = 512;
+    let samples_per_pixel = 32;
     let max_depth = 50;
 
     let nx = 800;
@@ -141,7 +141,7 @@ fn main() {
         let world = world.clone();
         pool.execute(move || {
             RNG.with(|rng| {
-                *rng.borrow_mut() = SmallRng::seed_from_u64(95);
+                *rng.borrow_mut() = SmallRng::seed_from_u64(95 + i as u64);
             });
             for j in 0..ny {
                 let mut c = Vec3A::ZERO;
