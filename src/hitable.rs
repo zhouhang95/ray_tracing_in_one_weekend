@@ -6,6 +6,7 @@ use rand::Rng;
 
 use crate::math::*;
 use crate::material::Material;
+use crate::lib::RNG;
 
 #[derive(Default, Clone)]
 pub struct HitRecord {
@@ -159,9 +160,9 @@ impl BvhNode {
         start: usize,
         end: usize,
     ) -> Self {
-        let mut rng = rand::thread_rng();
-
-        let axis: usize = rng.gen_range(0..3);
+        let axis: usize = RNG.with(|rng| {
+            rng.borrow_mut().gen_range(0..3)
+        });
         let object_span = end - start;
         let (left, right) = match object_span {
             0 => unimplemented!(),

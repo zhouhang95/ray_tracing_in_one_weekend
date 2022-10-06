@@ -5,6 +5,7 @@ use rand::Rng;
 use crate::math::*;
 use crate::hitable::HitRecord;
 use crate::texture::Texture;
+use crate::lib::RNG;
 
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool;
@@ -68,8 +69,10 @@ impl Material for Dielectric {
         let cos_theta = -r_in.d.dot(rec.norm).min(1.0);
         let sin_thera = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract =  sin_thera * ref_idx > 1.;
-        let mut rng = rand::thread_rng();
-        let dir = if cannot_refract || reflectance(cos_theta, ref_idx) > rng.gen::<f32>() {
+        let rnd_num = RNG.with(|rng| {
+            rng.borrow_mut().gen::<f32>()
+        });
+        let dir = if cannot_refract || reflectance(cos_theta, ref_idx) > rnd_num {
             reflect(r_in.d, rec.norm)
         } else {
             refract(r_in.d, rec.norm, ref_idx)
