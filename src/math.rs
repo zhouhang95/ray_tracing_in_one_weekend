@@ -1,5 +1,6 @@
 use glam::*;
 use rand::Rng;
+use std::mem::transmute;
 
 pub fn vec3a_near_zero(v: Vec3A) -> bool {
     let s = f32::EPSILON;
@@ -110,4 +111,21 @@ impl AABB {
 
 pub fn smooth(v: Vec3A) -> Vec3A {
     v * v * (3. - 2. * v)
+}
+
+pub fn offset_ray(p: Vec3A, n: Vec3A) -> Vec3A {
+    const ORIGIN: f32 = 1. / 32.;
+    const INT_SCALE: f32 = 256.;
+    const FLOAT_SCALE: f32 = 1. / 65536.;
+
+    let of_i_x = (n.x * INT_SCALE) as i32;
+    let of_i_y = (n.y * INT_SCALE) as i32;
+    let of_i_z = (n.z * INT_SCALE) as i32;
+    let p_i_x = unsafe {transmute::<i32, f32>(transmute::<f32, i32>(p.x) + if p.x < 0. {-of_i_x} else {of_i_x})};
+    let p_i_y = unsafe {transmute::<i32, f32>(transmute::<f32, i32>(p.y) + if p.y < 0. {-of_i_y} else {of_i_y})};
+    let p_i_z = unsafe {transmute::<i32, f32>(transmute::<f32, i32>(p.z) + if p.z < 0. {-of_i_z} else {of_i_z})};
+    let x = if p.x.abs() < ORIGIN {p.x + n.x * FLOAT_SCALE} else {p_i_x};
+    let y = if p.y.abs() < ORIGIN {p.y + n.y * FLOAT_SCALE} else {p_i_y};
+    let z = if p.z.abs() < ORIGIN {p.z + n.z * FLOAT_SCALE} else {p_i_z};
+    vec3a(x, y, z)
 }
