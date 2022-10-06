@@ -3,9 +3,11 @@
 use std::sync::Arc;
 use std::sync::mpsc::channel;
 
+use glam::vec2;
 use image::{ImageBuffer, RgbImage, Rgb};
 use glam::Vec3A;
 use glam::vec3a;
+use once_cell::sync::OnceCell;
 
 mod math;
 use math::*;
@@ -29,6 +31,15 @@ use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 
 use chrono::prelude::*;
+
+static ENV_TEX: OnceCell<ImageTex> = OnceCell::new();
+
+#[allow(dead_code)]
+fn tex_sky_color(d: Vec3A) -> Vec3A {
+    let uv = Sphere::get_uv(d);
+    let c = ENV_TEX.get().unwrap().value(vec2(1. - uv.x, uv.y), Vec3A::ZERO);
+    c * c
+}
 
 fn sky_color(d: Vec3A) -> Vec3A {
     let t = d.y * 0.5 + 0.5;
@@ -55,6 +66,7 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
 }
 
 fn main() {
+    ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
     let samples_per_pixel = 32;
     let max_depth = 50;
 

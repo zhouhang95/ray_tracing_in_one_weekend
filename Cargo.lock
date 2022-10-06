@@ -311,6 +311,7 @@ dependencies = [
  "chrono",
  "glam",
  "image",
+ "once_cell",
  "rand",
  "threadpool",
 ]

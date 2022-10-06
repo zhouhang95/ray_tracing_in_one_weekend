@@ -160,7 +160,7 @@ impl Texture for PerlinTex {
         ((10. * self.perlin.turb(p) + self.scale * p.z).sin() + 1.) * 0.5 * Vec3A::ONE
     }
 }
-
+#[derive(Debug)]
 pub struct ImageTex {
     img: ImageBuffer<Rgb<f32>, Vec<f32>>,
 }
