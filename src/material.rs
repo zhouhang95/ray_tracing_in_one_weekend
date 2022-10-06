@@ -38,7 +38,8 @@ impl Material for Lambertian {
         if vec3a_near_zero(scatter_direction) {
             scatter_direction = rec.norm;
         }
-        *scattered = Ray {o: rec.p, d: scatter_direction.normalize(), s: r_in.s};
+        let p = offset_ray(rec.p, rec.norm);
+        *scattered = Ray {o: p, d: scatter_direction.normalize(), s: r_in.s};
         *attenuation = self.albedo.value(rec.uv, rec.p);
         true
     }
