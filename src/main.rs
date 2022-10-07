@@ -163,6 +163,8 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
         Arc::new(XZRect {min: vec3a(0., 555., 0.), max: vec3a(555., 555., 555.), mat: white.clone()}),
         Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
         Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
+        Arc::new(GBox::new(vec3a(130., 0., 65.), vec3a(295., 165., 230.), white.clone())),
+        Arc::new(GBox::new(vec3a(265., 0., 295.), vec3a(430., 330., 460.), white.clone())),
     ];
     let cam = Camera::new(
         vec3a(278., 278., -800.),

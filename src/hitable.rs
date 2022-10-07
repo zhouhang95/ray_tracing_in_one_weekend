@@ -341,3 +341,39 @@ impl Hitable for YZRect {
         "YZRect".into()
     }
 }
+
+pub struct GBox {
+    pub aabb: AABB,
+    pub sides: HitableList,
+}
+
+impl GBox {
+    pub fn new(min: Vec3A, max: Vec3A, mat: Arc<dyn Material>) -> Self {
+        let sides: HitableList = vec![
+            Arc::new(XYRect { min: vec3a(min.x, min.y, min.z), max: vec3a(max.x, max.y, min.z), mat: mat.clone() }),
+            Arc::new(XYRect { min: vec3a(min.x, min.y, max.z), max: vec3a(max.x, max.y, max.z), mat: mat.clone() }),
+            Arc::new(XZRect { min: vec3a(min.x, min.y, min.z), max: vec3a(max.x, min.y, max.z), mat: mat.clone() }),
+            Arc::new(XZRect { min: vec3a(min.x, max.y, min.z), max: vec3a(max.x, max.y, max.z), mat: mat.clone() }),
+            Arc::new(YZRect { min: vec3a(min.x, min.y, min.z), max: vec3a(min.x, max.y, max.z), mat: mat.clone() }),
+            Arc::new(YZRect { min: vec3a(max.x, min.y, min.z), max: vec3a(max.x, max.y, max.z), mat: mat.clone() }),
+        ];
+        let aabb = AABB { min, max };
+
+        Self { aabb, sides }
+    }
+}
+
+impl Hitable for GBox {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        self.sides.hit(r, t_min, t_max, rec)
+    }
+
+    fn bbox(&self, aabb: &mut AABB) -> bool {
+        *aabb = self.aabb;
+        true
+    }
+
+    fn memo(&self) -> String {
+        todo!()
+    }
+}
