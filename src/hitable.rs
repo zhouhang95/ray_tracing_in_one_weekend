@@ -254,7 +254,7 @@ impl Hitable for XYRect {
 
     fn bbox(&self, aabb: &mut AABB) -> bool {
         aabb.min = vec3a(self.min.x, self.min.y, self.min.z - 0.0001);
-        aabb.max = vec3a(self.max.x, self.max.y, self.min.z + 0.0001);
+        aabb.max = vec3a(self.max.x, self.max.y, self.max.z + 0.0001);
         true
     }
     fn memo(&self) -> String {
@@ -294,7 +294,7 @@ impl Hitable for XZRect {
 
     fn bbox(&self, aabb: &mut AABB) -> bool {
         aabb.min = vec3a(self.min.x, self.min.y - 0.0001, self.min.z);
-        aabb.max = vec3a(self.max.x, self.max.y + 0.0001, self.min.z);
+        aabb.max = vec3a(self.max.x, self.max.y + 0.0001, self.max.z);
         true
     }
     fn memo(&self) -> String {
@@ -334,7 +334,7 @@ impl Hitable for YZRect {
 
     fn bbox(&self, aabb: &mut AABB) -> bool {
         aabb.min = vec3a(self.min.x - 0.0001, self.min.y, self.min.z);
-        aabb.max = vec3a(self.max.x + 0.0001, self.max.y, self.min.z);
+        aabb.max = vec3a(self.max.x + 0.0001, self.max.y, self.max.z);
         true
     }
     fn memo(&self) -> String {

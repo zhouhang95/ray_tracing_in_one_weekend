@@ -148,6 +148,32 @@ fn simple_light_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     (build_bvh(&mut world), cam)
 }
 
+fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
+    SKY_COLOR.set(black_sky).unwrap();
+
+    let red = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.65, 0.05, 0.05)})});
+    let white = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
+    let green = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.12, 0.45, 0.15)})});
+    let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(15., 15., 15.)})});
+
+    let mut world: HitableList = vec![
+        Arc::new(XZRect {min: vec3a(213., 554., 227.), max: vec3a(343., 554., 332.), mat: light.clone()}),
+        Arc::new(XYRect {min: vec3a(0., 0., 555.), max: vec3a(555., 555., 555.), mat: white.clone()}),
+        Arc::new(XZRect {min: vec3a(0., 0., 0.), max: vec3a(555., 0., 555.), mat: white.clone()}),
+        Arc::new(XZRect {min: vec3a(0., 555., 0.), max: vec3a(555., 555., 555.), mat: white.clone()}),
+        Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
+        Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
+    ];
+    let cam = Camera::new(
+        vec3a(278., 278., -800.),
+        vec3a(278., 278., 0.),
+        vec3a(0., 2., 0.),
+        40.,
+        aspect_ratio,
+    );
+    (build_bvh(&mut world), cam)
+}
+
 fn build_bvh(world: &mut Vec<Arc<dyn Hitable>>) -> Vec<Arc<dyn Hitable>> {
     let world_len = world.len();
     let bvh: Arc<dyn Hitable> = Arc::new(BvhNode::new(world, 0, world_len));
@@ -168,7 +194,7 @@ fn main() {
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
     // let pool = threadpool::ThreadPool::new(1);
-    let (world, cam) = simple_light_scene(aspect_ratio);
+    let (world, cam) = cornell_box(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {
