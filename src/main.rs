@@ -156,6 +156,14 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let green = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.12, 0.45, 0.15)})});
     let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(15., 15., 15.)})});
 
+    let box_1 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 330., 165.), white.clone()));
+    let box_1 = Arc::new(RotateY::new(box_1, 15.));
+    let box_1 = Arc::new(Translate {offset: vec3a(265., 0., 295.), ptr: box_1});
+
+    let box_2 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 165., 165.), white.clone()));
+    let box_2 = Arc::new(RotateY::new(box_2, -18.));
+    let box_2 = Arc::new(Translate {offset: vec3a(130., 0., 65.), ptr: box_2});
+
     let mut world: HitableList = vec![
         Arc::new(XZRect {min: vec3a(213., 554., 227.), max: vec3a(343., 554., 332.), mat: light.clone()}),
         Arc::new(XYRect {min: vec3a(0., 0., 555.), max: vec3a(555., 555., 555.), mat: white.clone()}),
@@ -163,8 +171,8 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
         Arc::new(XZRect {min: vec3a(0., 555., 0.), max: vec3a(555., 555., 555.), mat: white.clone()}),
         Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
         Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
-        Arc::new(GBox::new(vec3a(130., 0., 65.), vec3a(295., 165., 230.), white.clone())),
-        Arc::new(Translate {offset: vec3a(50., 50., 0.), ptr: Arc::new(GBox::new(vec3a(265., 0., 295.), vec3a(430., 330., 460.), white.clone()))}),
+        box_1,
+        box_2,
     ];
     let cam = Camera::new(
         vec3a(278., 278., -800.),

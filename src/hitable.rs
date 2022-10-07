@@ -411,3 +411,87 @@ impl Hitable for Translate {
         todo!()
     }
 }
+
+pub struct RotateY {
+    ptr: Arc<dyn Hitable>,
+    angle: f32,
+    sin_theta: f32,
+    cos_theta: f32,
+    has_box: bool,
+    aabb: AABB,
+}
+
+impl RotateY {
+    pub fn new(ptr: Arc<dyn Hitable>, angle: f32) -> Self {
+        let radians = angle.to_radians();
+        let (sin_theta, cos_theta) = radians.sin_cos();
+        let mut aabb_ = AABB::default();
+        let has_box = ptr.bbox(&mut aabb_);
+        let mut min = vec3a(f32::INFINITY, f32::INFINITY, f32::INFINITY);
+        let mut max = vec3a(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = if i == 0 {aabb_.min.x} else {aabb_.max.x};
+                    let y = if j == 0 {aabb_.min.y} else {aabb_.max.y};
+                    let z = if k == 0 {aabb_.min.z} else {aabb_.max.z};
+
+                    let new_x = cos_theta * x + sin_theta * z;
+                    let new_z = -sin_theta * x + cos_theta * z;
+
+                    let tester = vec3a(new_x, y, new_z);
+
+                    for c in 0..3 {
+                        min[c] = min[c].min(tester[c]);
+                        max[c] = max[c].max(tester[c]);
+                    }
+                }
+            }
+        }
+        let aabb = AABB { min, max };
+
+        Self { ptr, angle, sin_theta, cos_theta, has_box, aabb }
+    }
+}
+
+
+impl Hitable for RotateY {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        let mut o = r.o;
+        let mut d = r.d;
+
+        o.x = self.cos_theta * r.o.x - self.sin_theta * r.o.z;
+        o.z = self.sin_theta * r.o.x + self.cos_theta * r.o.z;
+
+        d.x = self.cos_theta * r.d.x - self.sin_theta * r.d.z;
+        d.z = self.sin_theta * r.d.x + self.cos_theta * r.d.z;
+
+        let rot_r = Ray {o, d, s: r.s};
+
+        if self.ptr.hit(&rot_r, t_min, t_max, rec) {
+            let mut p = rec.p;
+            let mut n = rec.norm;
+
+            p.x =  self.cos_theta * rec.p.x + self.sin_theta * rec.p.z;
+            p.z = -self.sin_theta * rec.p.x + self.cos_theta * rec.p.z;
+
+            n.x =  self.cos_theta * rec.norm.x + self.sin_theta * rec.norm.z;
+            n.z = -self.sin_theta * rec.norm.x + self.cos_theta * rec.norm.z;
+
+            rec.p = p;
+            rec.set_face_normal(&rot_r, n);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn bbox(&self, aabb: &mut AABB) -> bool {
+        *aabb = self.aabb;
+        self.has_box
+    }
+
+    fn memo(&self) -> String {
+        todo!()
+    }
+}
