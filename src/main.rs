@@ -154,7 +154,7 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let red = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.65, 0.05, 0.05)})});
     let white = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
     let green = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.12, 0.45, 0.15)})});
-    let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(15., 15., 15.)})});
+    let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(7., 7., 7.)})});
 
     let box_1 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 330., 165.), white.clone()));
     let box_1 = Arc::new(RotateY::new(box_1, 15.));
@@ -163,16 +163,18 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let box_2 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 165., 165.), white.clone()));
     let box_2 = Arc::new(RotateY::new(box_2, -18.));
     let box_2 = Arc::new(Translate {offset: vec3a(130., 0., 65.), ptr: box_2});
+    let mediun_2 = Arc::new(ConstantMedium::new(box_2, 0.01, Arc::new(ConstantTex{ col: Vec3A::ONE })));
 
     let mut world: HitableList = vec![
-        Arc::new(XZRect {min: vec3a(213., 554., 227.), max: vec3a(343., 554., 332.), mat: light.clone()}),
+        Arc::new(XZRect {min: vec3a(113., 554., 127.), max: vec3a(443., 554., 432.), mat: light.clone()}),
         Arc::new(XYRect {min: vec3a(0., 0., 555.), max: vec3a(555., 555., 555.), mat: white.clone()}),
         Arc::new(XZRect {min: vec3a(0., 0., 0.), max: vec3a(555., 0., 555.), mat: white.clone()}),
         Arc::new(XZRect {min: vec3a(0., 555., 0.), max: vec3a(555., 555., 555.), mat: white.clone()}),
         Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
         Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
-        box_1,
-        box_2,
+        // box_1,
+        // box_2,
+        mediun_2,
     ];
     let cam = Camera::new(
         vec3a(278., 278., -800.),

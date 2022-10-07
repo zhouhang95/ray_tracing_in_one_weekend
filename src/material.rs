@@ -82,3 +82,19 @@ impl Material for Dielectric {
         true
     }
 }
+
+pub struct Isotropic {
+    pub albedo: Arc<dyn Texture>,
+}
+
+impl Material for Isotropic {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        *scattered = Ray {
+            o: rec.p,
+            d: random_in_unit_sphere(),
+            s: r_in.s,
+        };
+        *attenuation = self.albedo.value(rec.uv, rec.p);
+        true
+    }
+}
