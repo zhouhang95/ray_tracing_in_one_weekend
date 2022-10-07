@@ -50,6 +50,10 @@ fn sky_color(d: Vec3A) -> Vec3A {
     Vec3A::ONE.lerp(vec3a(0.5, 0.7, 1.0), t)
 }
 
+fn black_sky(_d: Vec3A) -> Vec3A {
+    Vec3A::ZERO
+}
+
 fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     if depth <= 0 {
         return Vec3A::ZERO;
@@ -69,7 +73,7 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     }
 }
 
-fn sphere_world() -> Vec<Arc<dyn Hitable>> {
+fn sphere_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     SKY_COLOR.set(sky_color).unwrap();
 
     // let checker = Arc::new(CheckerTex::new(vec3a(0.2, 0.3, 0.1), vec3a(0.9, 0.9, 0.9)));
@@ -110,11 +114,43 @@ fn sphere_world() -> Vec<Arc<dyn Hitable>> {
             world.push(Arc::new(Sphere {c: center, r: 0.2, mat, name: format!("Sphere {}, {}", a, b)}));
         }
     }
+    let cam = Camera::new(
+        vec3a(13., 2., 3.),
+        vec3a(0., 0., 0.),
+        vec3a(0., 1., 0.),
+        20.,
+        aspect_ratio,
+    );
+    (build_bvh(&mut world), cam)
+}
 
+fn simple_light_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
+    SKY_COLOR.set(black_sky).unwrap();
+
+    let perlin = Arc::new(PerlinTex::new(4.));
+
+    let mat_perlin = Arc::new(Lambertian { albedo: perlin});
+    let material_1 = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(4., 4., 4.)})});
+
+    let mut world: HitableList = vec![
+        Arc::new(Sphere {c: vec3a( 1.0, -1000., -1.0), r: 1000.0, mat: mat_perlin.clone(), name: "Ground".to_string()}),
+        Arc::new(Sphere {c: vec3a( 0.0, 2.0, 0.0), r: 2., mat: mat_perlin.clone(), name: "Sphere_1".to_string()}),
+        Arc::new(Sphere {c: vec3a( 0.0, 6.5, 0.0), r: 2., mat: material_1.clone(), name: "Sphere_2".to_string()}),
+        Arc::new(XYRect {min: vec3a(3., 1., -2.), max: vec3a(5., 3., -2.), mat: material_1.clone()})
+    ];
+    let cam = Camera::new(
+        vec3a(26., 3., 6.),
+        vec3a(0., 0., 0.),
+        vec3a(0., 2., 0.),
+        20.,
+        aspect_ratio,
+    );
+    (build_bvh(&mut world), cam)
+}
+
+fn build_bvh(world: &mut Vec<Arc<dyn Hitable>>) -> Vec<Arc<dyn Hitable>> {
     let world_len = world.len();
-
-    let bvh: Arc<dyn Hitable> = Arc::new(BvhNode::new(&mut world, 0, world_len));
-
+    let bvh: Arc<dyn Hitable> = Arc::new(BvhNode::new(world, 0, world_len));
     vec![bvh]
 }
 
@@ -127,19 +163,12 @@ fn main() {
     let ny = 400;
     let aspect_ratio = nx as f32 / ny as f32;
 
-    let cam = Camera::new(
-        vec3a(13., 2., 3.),
-        vec3a(0., 0., 0.),
-        vec3a(0., 1., 0.),
-        20.,
-        aspect_ratio,
-    );
     let t = EZTimer::new();
 
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
     // let pool = threadpool::ThreadPool::new(1);
-    let world = sphere_world();
+    let (world, cam) = simple_light_scene(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {

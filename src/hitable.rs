@@ -236,7 +236,7 @@ impl Hitable for XYRect {
             return false;
         }
         let p = r.at(t);
-        if p.x < self.min.x || p.x > self.max.x || p.y < self.min.y || p.y > self.min.y {
+        if p.x < self.min.x || p.x > self.max.x || p.y < self.min.y || p.y > self.max.y {
             return false;
         }
 
@@ -245,7 +245,7 @@ impl Hitable for XYRect {
         rec.p = p;
         rec.t = t;
 
-        let outward_normal = vec3a(0., 0., 1.);
+        let outward_normal = Vec3A::Z;
         rec.set_face_normal(r, outward_normal);
         rec.mat = Some(self.mat.clone());
 
@@ -276,7 +276,7 @@ impl Hitable for XZRect {
             return false;
         }
         let p = r.at(t);
-        if p.x < self.min.x || p.x > self.max.x || p.z < self.min.z || p.z > self.min.z {
+        if p.x < self.min.x || p.x > self.max.x || p.z < self.min.z || p.z > self.max.z {
             return false;
         }
 
@@ -285,7 +285,7 @@ impl Hitable for XZRect {
         rec.p = p;
         rec.t = t;
 
-        let outward_normal = vec3a(0., 1., 0.);
+        let outward_normal = Vec3A::Y;
         rec.set_face_normal(r, outward_normal);
         rec.mat = Some(self.mat.clone());
 
@@ -316,7 +316,7 @@ impl Hitable for YZRect {
             return false;
         }
         let p = r.at(t);
-        if p.z < self.min.z || p.z > self.max.z || p.y < self.min.y || p.y > self.min.y {
+        if p.z < self.min.z || p.z > self.max.z || p.y < self.min.y || p.y > self.max.y {
             return false;
         }
 
@@ -325,7 +325,7 @@ impl Hitable for YZRect {
         rec.p = p;
         rec.t = t;
 
-        let outward_normal = vec3a(1., 0., 0.);
+        let outward_normal = Vec3A::X;
         rec.set_face_normal(r, outward_normal);
         rec.mat = Some(self.mat.clone());
 
