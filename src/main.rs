@@ -36,6 +36,7 @@ use rand::rngs::SmallRng;
 use chrono::prelude::*;
 
 static ENV_TEX: OnceCell<ImageTex> = OnceCell::new();
+static SKY_COLOR: OnceCell<fn(Vec3A) -> Vec3A> = OnceCell::new();
 
 #[allow(dead_code)]
 fn tex_sky_color(d: Vec3A) -> Vec3A {
@@ -64,18 +65,12 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
             emit
         }
     } else {
-        sky_color(r.d)
+        SKY_COLOR.get().unwrap()(r.d)
     }
 }
 
-fn main() {
-    ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
-    let samples_per_pixel = 32;
-    let max_depth = 50;
-
-    let nx = 800;
-    let ny = 400;
-    let aspect_ratio = nx as f32 / ny as f32;
+fn sphere_world() -> Vec<Arc<dyn Hitable>> {
+    SKY_COLOR.set(sky_color).unwrap();
 
     // let checker = Arc::new(CheckerTex::new(vec3a(0.2, 0.3, 0.1), vec3a(0.9, 0.9, 0.9)));
     let perlin = Arc::new(PerlinTex::new(4.));
@@ -120,7 +115,17 @@ fn main() {
 
     let bvh: Arc<dyn Hitable> = Arc::new(BvhNode::new(&mut world, 0, world_len));
 
-    let world = vec![bvh];
+    vec![bvh]
+}
+
+fn main() {
+    ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
+    let samples_per_pixel = 32;
+    let max_depth = 50;
+
+    let nx = 800;
+    let ny = 400;
+    let aspect_ratio = nx as f32 / ny as f32;
 
     let cam = Camera::new(
         vec3a(13., 2., 3.),
@@ -134,6 +139,7 @@ fn main() {
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
     // let pool = threadpool::ThreadPool::new(1);
+    let world = sphere_world();
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {
