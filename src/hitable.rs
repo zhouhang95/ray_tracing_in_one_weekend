@@ -377,3 +377,37 @@ impl Hitable for GBox {
         todo!()
     }
 }
+
+pub struct Translate {
+    pub offset: Vec3A,
+    pub ptr: Arc<dyn Hitable>,
+}
+
+impl Hitable for Translate {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        let moved_r = Ray { o: r.o - self.offset, d: r.d, s: r.s};
+        if self.ptr.hit(&moved_r, t_min, t_max, rec) {
+            rec.p += self.offset;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn bbox(&self, aabb: &mut AABB) -> bool {
+        let mut get_aabb = AABB::default();
+        if self.ptr.bbox(&mut get_aabb) {
+            *aabb = AABB {
+                min: get_aabb.min + self.offset,
+                max: get_aabb.max + self.offset,
+            };
+            true
+        } else {
+            false
+        }
+    }
+
+    fn memo(&self) -> String {
+        todo!()
+    }
+}
