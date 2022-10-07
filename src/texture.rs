@@ -6,6 +6,7 @@ use image::*;
 use rand::seq::SliceRandom;
 
 use crate::math::vec3a_random_range;
+use crate::lib::RNG;
 
 pub trait Texture: Send + Sync {
     fn value(&self, uv: Vec2, p: Vec3A) -> Vec3A;
@@ -58,7 +59,6 @@ struct Perlin {
 
 impl Default for Perlin {
     fn default() -> Self {
-        let mut rng = rand::thread_rng();
         let mut rand_vec = vec![Vec3A::ZERO; PERLIN_POINT_COUNT];
         for v in &mut rand_vec {
             *v = vec3a_random_range(-1., 1.);
@@ -68,11 +68,17 @@ impl Default for Perlin {
         for i in 0..p.len() {
             p[i] = i;
         }
-        p.shuffle(&mut rng);
+        RNG.with(|rng| {
+            p.shuffle(&mut *rng.borrow_mut());
+        });
         let perm_x = p.clone();
-        p.shuffle(&mut rng);
+        RNG.with(|rng| {
+            p.shuffle(&mut *rng.borrow_mut());
+        });
         let perm_y = p.clone();
-        p.shuffle(&mut rng);
+        RNG.with(|rng| {
+            p.shuffle(&mut *rng.borrow_mut());
+        });
         let perm_z = p.clone();
 
         Self {

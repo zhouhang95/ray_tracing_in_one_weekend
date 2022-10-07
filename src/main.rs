@@ -27,8 +27,11 @@ use utils::*;
 mod texture;
 use texture::*;
 
+mod lib;
+use lib::*;
+
 use rand::{Rng, SeedableRng};
-use rand::rngs::StdRng;
+use rand::rngs::SmallRng;
 
 use chrono::prelude::*;
 
@@ -90,7 +93,7 @@ fn main() {
         Arc::new(Sphere {c: vec3a( 4.0, 1.0, 0.0), r: 1., mat: material_3, name: "Sphere_3".to_string()}),
     ];
 
-    let mut rng = StdRng::seed_from_u64(95);
+    let mut rng = SmallRng::seed_from_u64(95);
 
     for a in -11..=11 {
         for b in -11..=11 {
@@ -137,13 +140,21 @@ fn main() {
         let tx = tx.clone();
         let world = world.clone();
         pool.execute(move || {
-            let mut rng = rand::thread_rng();
+            RNG.with(|rng| {
+                *rng.borrow_mut() = SmallRng::seed_from_u64(95 + i as u64);
+            });
             for j in 0..ny {
                 let mut c = Vec3A::ZERO;
-                for _ in 0..samples_per_pixel {
-                    let u = (i as f32 + rng.gen::<f32>()) / nx as f32;
-                    let v = (j as f32 + rng.gen::<f32>()) / ny as f32;
-                    let r = cam.get_ray(u, v);
+                let mut rays: Vec<Ray> = Vec::with_capacity(samples_per_pixel);
+                RNG.with(|rng| {
+                    for _ in 0..samples_per_pixel {
+                        let u = (i as f32 + rng.borrow_mut().gen::<f32>()) / nx as f32;
+                        let v = (j as f32 + rng.borrow_mut().gen::<f32>()) / ny as f32;
+                        let r = cam.get_ray(u, v);
+                        rays.push(r);
+                    }
+                });
+                for r in rays {
                     c += ray_color(r, &world, max_depth);
                 }
                 c /= samples_per_pixel as f32;

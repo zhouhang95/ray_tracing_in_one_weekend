@@ -1,6 +1,10 @@
+use std::mem::transmute;
+
 use glam::*;
 use rand::Rng;
 use std::mem::transmute;
+
+use crate::lib::RNG;
 
 pub fn vec3a_near_zero(v: Vec3A) -> bool {
     let s = f32::EPSILON;
@@ -8,8 +12,12 @@ pub fn vec3a_near_zero(v: Vec3A) -> bool {
 }
 
 pub fn vec3a_random() -> Vec3A {
-    let mut rng = rand::thread_rng();
-    vec3a(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
+    RNG.with(|rng| {
+        let x = rng.borrow_mut().gen::<f32>();
+        let y = rng.borrow_mut().gen::<f32>();
+        let z = rng.borrow_mut().gen::<f32>();
+        vec3a(x, y, z)
+    })
 }
 
 pub fn vec3a_random_range(min: f32, max: f32) -> Vec3A{
