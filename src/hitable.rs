@@ -220,3 +220,124 @@ impl Hitable for BvhNode {
         hit_left || hit_right
     }
 }
+
+
+#[derive(Clone)]
+pub struct XYRect {
+    pub min: Vec3A,
+    pub max: Vec3A,
+    pub mat: Arc<dyn Material>,
+}
+
+impl Hitable for XYRect {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        let t = (self.min.z - r.o.z) / r.d.z;
+        if t < t_min || t > t_max {
+            return false;
+        }
+        let p = r.at(t);
+        if p.x < self.min.x || p.x > self.max.x || p.y < self.min.y || p.y > self.min.y {
+            return false;
+        }
+
+        let uv = (p - self.min) / (self.max - self.min);
+        rec.uv = uv.xy();
+        rec.p = p;
+        rec.t = t;
+
+        let outward_normal = vec3a(0., 0., 1.);
+        rec.set_face_normal(r, outward_normal);
+        rec.mat = Some(self.mat.clone());
+
+        true
+    }
+
+    fn bbox(&self, aabb: &mut AABB) -> bool {
+        aabb.min = vec3a(self.min.x, self.min.y, self.min.z - 0.0001);
+        aabb.max = vec3a(self.max.x, self.max.y, self.min.z + 0.0001);
+        true
+    }
+    fn memo(&self) -> String {
+        "XYRect".into()
+    }
+}
+
+#[derive(Clone)]
+pub struct XZRect {
+    pub min: Vec3A,
+    pub max: Vec3A,
+    pub mat: Arc<dyn Material>,
+}
+
+impl Hitable for XZRect {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        let t = (self.min.y - r.o.y) / r.d.y;
+        if t < t_min || t > t_max {
+            return false;
+        }
+        let p = r.at(t);
+        if p.x < self.min.x || p.x > self.max.x || p.z < self.min.z || p.z > self.min.z {
+            return false;
+        }
+
+        let uv = (p - self.min) / (self.max - self.min);
+        rec.uv = uv.xz();
+        rec.p = p;
+        rec.t = t;
+
+        let outward_normal = vec3a(0., 1., 0.);
+        rec.set_face_normal(r, outward_normal);
+        rec.mat = Some(self.mat.clone());
+
+        true
+    }
+
+    fn bbox(&self, aabb: &mut AABB) -> bool {
+        aabb.min = vec3a(self.min.x, self.min.y - 0.0001, self.min.z);
+        aabb.max = vec3a(self.max.x, self.max.y + 0.0001, self.min.z);
+        true
+    }
+    fn memo(&self) -> String {
+        "XZRect".into()
+    }
+}
+
+#[derive(Clone)]
+pub struct YZRect {
+    pub min: Vec3A,
+    pub max: Vec3A,
+    pub mat: Arc<dyn Material>,
+}
+
+impl Hitable for YZRect {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        let t = (self.min.x - r.o.x) / r.d.x;
+        if t < t_min || t > t_max {
+            return false;
+        }
+        let p = r.at(t);
+        if p.z < self.min.z || p.z > self.max.z || p.y < self.min.y || p.y > self.min.y {
+            return false;
+        }
+
+        let uv = (p - self.min) / (self.max - self.min);
+        rec.uv = uv.yz();
+        rec.p = p;
+        rec.t = t;
+
+        let outward_normal = vec3a(1., 0., 0.);
+        rec.set_face_normal(r, outward_normal);
+        rec.mat = Some(self.mat.clone());
+
+        true
+    }
+
+    fn bbox(&self, aabb: &mut AABB) -> bool {
+        aabb.min = vec3a(self.min.x - 0.0001, self.min.y, self.min.z);
+        aabb.max = vec3a(self.max.x + 0.0001, self.max.y, self.min.z);
+        true
+    }
+    fn memo(&self) -> String {
+        "YZRect".into()
+    }
+}
