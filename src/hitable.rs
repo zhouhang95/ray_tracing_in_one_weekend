@@ -521,11 +521,11 @@ impl Hitable for ConstantMedium {
         const ENABLE_DEBUGGING: bool = true;
         let debugging: bool = ENABLE_DEBUGGING && RNG.with(|rng| rng.borrow_mut().gen::<f32>() < 0.00001);
         let mut rec_1 = HitRecord::default();
-        if self.boundary.hit(r, f32::NEG_INFINITY, f32::INFINITY, &mut rec_1) {
+        if !self.boundary.hit(r, f32::NEG_INFINITY, f32::INFINITY, &mut rec_1) {
             return false;
         }
         let mut rec_2 = HitRecord::default();
-        if self.boundary.hit(r, rec_1.t + 0.0001, f32::INFINITY, &mut rec_1) {
+        if !self.boundary.hit(r, rec_1.t + 0.0001, f32::INFINITY, &mut rec_1) {
             return false;
         }
         if debugging {
