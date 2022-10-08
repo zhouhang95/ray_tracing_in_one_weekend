@@ -149,7 +149,7 @@ fn simple_light_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
 }
 
 fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
-    SKY_COLOR.set(black_sky).unwrap();
+    SKY_COLOR.set(sky_color).unwrap();
 
     let red = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.65, 0.05, 0.05)})});
     let white = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
@@ -166,15 +166,15 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let mediun_2 = Arc::new(ConstantMedium::new(box_2.clone(), 0.01, Arc::new(ConstantTex{ col: Vec3A::ONE })));
 
     let mut world: HitableList = vec![
-        Arc::new(XZRect {min: vec3a(113., 554., 127.), max: vec3a(443., 554., 432.), mat: light.clone()}),
-        Arc::new(XYRect {min: vec3a(0., 0., 555.), max: vec3a(555., 555., 555.), mat: white.clone()}),
-        Arc::new(XZRect {min: vec3a(0., 0., 0.), max: vec3a(555., 0., 555.), mat: white.clone()}),
-        Arc::new(XZRect {min: vec3a(0., 555., 0.), max: vec3a(555., 555., 555.), mat: white.clone()}),
-        Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
-        Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
+        // Arc::new(XZRect {min: vec3a(113., 554., 127.), max: vec3a(443., 554., 432.), mat: light.clone()}),
+        // Arc::new(XYRect {min: vec3a(0., 0., 555.), max: vec3a(555., 555., 555.), mat: white.clone()}),
+        // Arc::new(XZRect {min: vec3a(0., 0., 0.), max: vec3a(555., 0., 555.), mat: white.clone()}),
+        // Arc::new(XZRect {min: vec3a(0., 555., 0.), max: vec3a(555., 555., 555.), mat: white.clone()}),
+        // Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
+        // Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
         // box_1,
-        // box_2,
-        mediun_2,
+        box_2,
+        // mediun_2,
     ];
     let cam = Camera::new(
         vec3a(278., 278., -800.),
@@ -194,7 +194,7 @@ fn build_bvh(world: &mut Vec<Arc<dyn Hitable>>) -> Vec<Arc<dyn Hitable>> {
 
 fn main() {
     ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
-    let samples_per_pixel = 32;
+    let samples_per_pixel = 1;
     let max_depth = 50;
 
     let nx = 800;
@@ -209,14 +209,14 @@ fn main() {
     let (world, cam) = cornell_box(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
-    for i in 0..nx {
+    for i in 450..451 {
         let tx = tx.clone();
         let world = world.clone();
         pool.execute(move || {
             RNG.with(|rng| {
                 *rng.borrow_mut() = SmallRng::seed_from_u64(95 + i as u64);
             });
-            for j in 0..ny {
+            for j in 100..101 {
                 let mut c = Vec3A::ZERO;
                 let mut rays: Vec<Ray> = Vec::with_capacity(samples_per_pixel);
                 RNG.with(|rng| {
