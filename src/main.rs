@@ -163,7 +163,7 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let box_2 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 165., 165.), white.clone()));
     let box_2 = Arc::new(RotateY::new(box_2, -18.));
     let box_2 = Arc::new(Translate {offset: vec3a(130., 0., 65.), ptr: box_2});
-    let mediun_2 = Arc::new(ConstantMedium::new(box_2, 0.01, Arc::new(ConstantTex{ col: Vec3A::ONE })));
+    let mediun_2 = Arc::new(ConstantMedium::new(box_2.clone(), 0.01, Arc::new(ConstantTex{ col: Vec3A::ONE })));
 
     let mut world: HitableList = vec![
         Arc::new(XZRect {min: vec3a(113., 554., 127.), max: vec3a(443., 554., 432.), mat: light.clone()}),

@@ -30,6 +30,12 @@ impl HitRecord {
     }
 }
 
+impl std::fmt::Display for HitRecord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "rec: p: {}, n: {}, t: {}, front: {}, uv: {}", self.p, self.norm, self.t, self.front_face, self.uv)
+    }
+}
+
 pub trait Hitable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
     fn bbox(&self, aabb: &mut AABB) -> bool;
