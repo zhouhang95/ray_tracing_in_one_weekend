@@ -372,7 +372,11 @@ impl GBox {
 
 impl Hitable for GBox {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        self.sides.hit(r, t_min, t_max, rec)
+        let res = self.sides.hit(r, t_min, t_max, rec);
+        // if res {
+        //     eprintln!("{}", rec);
+        // }
+        res
     }
 
     fn bbox(&self, aabb: &mut AABB) -> bool {
@@ -518,14 +522,14 @@ impl ConstantMedium {
 
 impl Hitable for ConstantMedium {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        const ENABLE_DEBUGGING: bool = true;
+        const ENABLE_DEBUGGING: bool = false;
         let debugging: bool = ENABLE_DEBUGGING && RNG.with(|rng| rng.borrow_mut().gen::<f32>() < 0.00001);
         let mut rec_1 = HitRecord::default();
         if !self.boundary.hit(r, f32::NEG_INFINITY, f32::INFINITY, &mut rec_1) {
             return false;
         }
         let mut rec_2 = HitRecord::default();
-        if !self.boundary.hit(r, rec_1.t + 0.0001, f32::INFINITY, &mut rec_1) {
+        if !self.boundary.hit(r, rec_1.t + 0.0001, f32::INFINITY, &mut rec_2) {
             return false;
         }
         if debugging {
