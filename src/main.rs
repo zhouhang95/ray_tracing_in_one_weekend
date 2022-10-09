@@ -268,11 +268,11 @@ fn build_bvh(world: &mut Vec<Arc<dyn Hitable>>) -> Vec<Arc<dyn Hitable>> {
 
 fn main() {
     ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
-    let samples_per_pixel = 32;
+    let samples_per_pixel = 10000;
     let max_depth = 50;
 
-    let nx = 800;
-    let ny = 400;
+    let nx = 600;
+    let ny = 600;
     let aspect_ratio = nx as f32 / ny as f32;
 
     let t = EZTimer::new();
