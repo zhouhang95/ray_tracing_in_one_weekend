@@ -141,7 +141,7 @@ fn simple_light_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let cam = Camera::new(
         vec3a(26., 3., 6.),
         vec3a(0., 0., 0.),
-        vec3a(0., 2., 0.),
+        vec3a(0., 1., 0.),
         20.,
         aspect_ratio,
     );
@@ -179,7 +179,81 @@ fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let cam = Camera::new(
         vec3a(278., 278., -800.),
         vec3a(278., 278., 0.),
-        vec3a(0., 2., 0.),
+        vec3a(0., 1., 0.),
+        40.,
+        aspect_ratio,
+    );
+    (build_bvh(&mut world), cam)
+}
+
+
+fn final_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
+    SKY_COLOR.set(black_sky).unwrap();
+
+    let ground = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.48, 0.83, 0.53)})});
+    let white = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
+    let brown = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.7, 0.3, 0.1)})});
+    let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(7., 7., 7.)})});
+    let dielectric = Arc::new(Dielectric {ior : 1.5});
+    let metal = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.9), fuzz: 1.});
+
+    let earth_map = Arc::new(ImageTex::new("res/earthmap.jpg".into()));
+    let earth_mat = Arc::new(Lambertian { albedo: earth_map});
+    let earth = Arc::new(Sphere {c: vec3a( 400.0, 200.0, 400.0), r: 100., mat: earth_mat, name: "EarthSphere".to_string()});
+
+    let perlin = Arc::new(PerlinTex::new(0.1));
+    let mat_perlin = Arc::new(Lambertian { albedo: perlin});
+    let perlin_sphere = Arc::new(Sphere {c: vec3a( 220.0, 280.0, 300.0), r: 80., mat: mat_perlin, name: "PerlinSphere".to_string()});
+
+    let brown_sphere = Arc::new(Sphere {c: vec3a( 400.0, 400.0, 200.0), r: 50., mat: brown, name: "BrownSphere".to_string()});
+    let dielectric_sphere = Arc::new(Sphere {c: vec3a( 260.0, 150.0, 45.0), r: 50., mat: dielectric.clone(), name: "DielectricSphere".to_string()});
+    let metal_sphere = Arc::new(Sphere {c: vec3a( 0.0, 150.0, 145.0), r: 50., mat: metal, name: "MetalSphere".to_string()});
+
+    let boundary = Arc::new(Sphere {c: vec3a( 360.0, 150.0, 145.0), r: 50., mat: dielectric, name: "boundary".to_string()});
+    let medium = Arc::new(ConstantMedium::new(boundary.clone(), 0.2, Arc::new(ConstantTex{ col: vec3a(0.2, 0.4, 0.9) })));
+
+    let mut spheres: HitableList = Vec::new();
+    for _ in 0..1000 {
+        spheres.push(Arc::new(Sphere {c: vec3a_random_range(0., 165.), r: 10.0, mat: white.clone(), name: "Ground".to_string()}));
+    }
+    let spheres = Arc::new(BvhNode::new(&mut spheres, 0, 1000));
+    let spheres = Arc::new(RotateY::new(spheres, 15.));
+    let spheres = Arc::new(Translate {offset: vec3a(-100., 270., 395.), ptr: spheres});
+
+    let mut boxes: HitableList = Vec::new();
+    for i in 0..20 {
+        for j in 0..20 {
+            let w = 100.0;
+            let x0 = -1000.0 + i as f32 *w;
+            let z0 = -1000.0 + j as f32* w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = RNG.with(|rng| rng.borrow_mut().gen::<f32>()) * 100. + 1.;
+            let z1 = z0 + w;
+            let min = vec3a(x0, y0, z0);
+            let max = vec3a(x1, y1, z1);
+
+            boxes.push(Arc::new(GBox::new(min, max, ground.clone())));
+        }
+    }
+    let boxes = Arc::new(BvhNode::new(&mut boxes, 0, 20 * 20));
+
+    let mut world: HitableList = vec![
+        Arc::new(XZRect {min: vec3a(123., 544., 147.), max: vec3a(423., 554., 412.), mat: light.clone()}),
+        spheres,
+        earth,
+        perlin_sphere,
+        brown_sphere,
+        dielectric_sphere,
+        metal_sphere,
+        boxes,
+        boundary,
+        medium,
+    ];
+    let cam = Camera::new(
+        vec3a(478., 278., -600.),
+        vec3a(278., 278., 0.),
+        vec3a(0., 1., 0.),
         40.,
         aspect_ratio,
     );
@@ -205,8 +279,7 @@ fn main() {
 
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
-    // let pool = threadpool::ThreadPool::new(1);
-    let (world, cam) = cornell_box(aspect_ratio);
+    let (world, cam) = final_scene(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {
