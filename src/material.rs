@@ -28,11 +28,11 @@ impl Material for Emission {
     }
 }
 
-pub struct Lambertian {
+pub struct Diffuse {
     pub albedo: Arc<dyn Texture>,
 }
 
-impl Material for Lambertian {
+impl Material for Diffuse {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let mut scatter_direction = rec.norm + random_in_unit_sphere().normalize();
         if vec3a_near_zero(scatter_direction) {

@@ -40,7 +40,7 @@ pub fn sphere_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let perlin = Arc::new(PerlinTex::new(4.));
     let earth_map = Arc::new(ImageTex::new("res/earthmap.jpg".into()));
 
-    let material_ground = Arc::new(Lambertian { albedo: perlin});
+    let material_ground = Arc::new(Diffuse { albedo: perlin});
     let material_1 = Arc::new(Emission { emit: earth_map});
     let material_2 = Arc::new(Dielectric {ior : 1.5});
     let material_3 = Arc::new(Metal { albedo: vec3a(0.8, 0.6, 0.2), fuzz: 0.});
@@ -63,7 +63,7 @@ pub fn sphere_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
                 let b = vec3a(rng.gen(), rng.gen(), rng.gen());
                 let col =  a * b;
                 let albedo = Arc::new(ConstantTex {col});
-                Arc::new(Lambertian {albedo})
+                Arc::new(Diffuse {albedo})
             } else if choose_mat < 0.95 {
                 let albedo = vec3a(rng.gen(), rng.gen(), rng.gen()) * 0.5 + 0.5;
                 let fuzz = rng.gen::<f32>();
@@ -89,7 +89,7 @@ pub fn simple_light_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) 
 
     let perlin = Arc::new(PerlinTex::new(4.));
 
-    let mat_perlin = Arc::new(Lambertian { albedo: perlin});
+    let mat_perlin = Arc::new(Diffuse { albedo: perlin});
     let material_1 = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(4., 4., 4.)})});
 
     let mut world: HitableList = vec![
@@ -111,9 +111,9 @@ pub fn simple_light_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) 
 pub fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     SKY_COLOR.set(black_sky).unwrap();
 
-    let red = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.65, 0.05, 0.05)})});
-    let white = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
-    let green = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.12, 0.45, 0.15)})});
+    let red = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.65, 0.05, 0.05)})});
+    let white = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
+    let green = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.12, 0.45, 0.15)})});
     let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(7., 7., 7.)})});
 
     let box_1 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 330., 165.), white.clone()));
@@ -149,19 +149,19 @@ pub fn cornell_box(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
 pub fn final_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     SKY_COLOR.set(black_sky).unwrap();
 
-    let ground = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.48, 0.83, 0.53)})});
-    let white = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
-    let brown = Arc::new(Lambertian { albedo: Arc::new(ConstantTex{ col: vec3a(0.7, 0.3, 0.1)})});
+    let ground = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.48, 0.83, 0.53)})});
+    let white = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
+    let brown = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.7, 0.3, 0.1)})});
     let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(7., 7., 7.)})});
     let dielectric = Arc::new(Dielectric {ior : 1.5});
     let metal = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.9), fuzz: 1.});
 
     let earth_map = Arc::new(ImageTex::new("res/earthmap.jpg".into()));
-    let earth_mat = Arc::new(Lambertian { albedo: earth_map});
+    let earth_mat = Arc::new(Diffuse { albedo: earth_map});
     let earth = Arc::new(Sphere {c: vec3a( 400.0, 200.0, 400.0), r: 100., mat: earth_mat, name: "EarthSphere".to_string()});
 
     let perlin = Arc::new(PerlinTex::new(0.1));
-    let mat_perlin = Arc::new(Lambertian { albedo: perlin});
+    let mat_perlin = Arc::new(Diffuse { albedo: perlin});
     let perlin_sphere = Arc::new(Sphere {c: vec3a( 220.0, 280.0, 300.0), r: 80., mat: mat_perlin, name: "PerlinSphere".to_string()});
 
     let brown_sphere = Arc::new(Sphere {c: vec3a( 400.0, 400.0, 200.0), r: 50., mat: brown, name: "BrownSphere".to_string()});
