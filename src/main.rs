@@ -38,6 +38,8 @@ use chrono::prelude::*;
 static ENV_TEX: OnceCell<ImageTex> = OnceCell::new();
 static SKY_COLOR: OnceCell<fn(Vec3A) -> Vec3A> = OnceCell::new();
 
+const MAX_DEPTH: i32 = 50;
+
 #[allow(dead_code)]
 fn tex_sky_color(d: Vec3A) -> Vec3A {
     let uv = Sphere::get_uv(d);
@@ -55,7 +57,7 @@ fn black_sky(_d: Vec3A) -> Vec3A {
 }
 
 fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
-    if depth <= 0 {
+    if depth > MAX_DEPTH {
         return Vec3A::ZERO;
     }
     let mut rec = HitRecord::default();
@@ -64,7 +66,7 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
         let mut attenuation = Vec3A::ZERO;
         let emit = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered) {
-            emit + attenuation * ray_color(scattered, &world, depth-1)
+            emit + attenuation * ray_color(scattered, &world, depth+1)
         } else {
             emit
         }
@@ -301,7 +303,7 @@ fn main() {
                     }
                 });
                 for r in rays {
-                    c += ray_color(r, &world, max_depth);
+                    c += ray_color(r, &world, 0);
                 }
                 c /= samples_per_pixel as f32;
                 c = c.powf(1.0 / 2.0);
