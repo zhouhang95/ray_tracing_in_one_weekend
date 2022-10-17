@@ -63,13 +63,16 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
     let mut rec = HitRecord::default();
     if world.hit(&r, 1e-3, f32::MAX, &mut rec) {
         let mut scattered = Ray {o: Vec3A::ZERO, d: Vec3A::ZERO, s: r.s};
-        let mut attenuation = Vec3A::ZERO;
-        let emit = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
+        let mut attenuation = Vec3A::ONE;
+        let mut ret = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered) {
-            emit + attenuation * ray_color(scattered, &world, depth+1)
-        } else {
-            emit
+            let russian_roulette = RNG.with(|rng| rng.borrow_mut().gen::<f32>());
+            let threshold = attenuation.max_element();
+            if russian_roulette < threshold {
+                ret += attenuation * ray_color(scattered, &world, depth+1) / threshold;
+            }
         }
+        ret
     } else {
         SKY_COLOR.get().unwrap()(r.d)
     }
