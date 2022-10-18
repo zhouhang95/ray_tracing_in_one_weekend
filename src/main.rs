@@ -14,6 +14,7 @@ mod hitable;
 use hitable::*;
 
 mod material;
+mod pbr;
 
 mod utils;
 use utils::*;

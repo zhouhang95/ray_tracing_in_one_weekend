@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::camera::Camera;
 use crate::hitable::*;
 use crate::material::*;
+use crate::pbr::*;
 use crate::texture::*;
 use crate::math::*;
 use once_cell::sync::OnceCell;
@@ -151,7 +152,7 @@ pub fn final_scene(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
 
     let ground = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.48, 0.83, 0.53)})});
     let white = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
-    let brown = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.7, 0.3, 0.1)})});
+    let brown = Arc::new(OrenNayar { albedo: Arc::new(ConstantTex{ col: vec3a(0.7, 0.3, 0.1)}), roughness: 0.5});
     let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(7., 7., 7.)})});
     let dielectric = Arc::new(Dielectric {ior : 1.5});
     let metal = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.9), fuzz: 1.});
