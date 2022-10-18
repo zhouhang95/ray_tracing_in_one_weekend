@@ -38,8 +38,21 @@ impl Material for Diffuse {
         if vec3a_near_zero(scatter_direction) {
             scatter_direction = rec.norm;
         }
-        let p = offset_ray(rec.p, rec.norm);
+        let p = offset_hit_point(rec.p, rec.norm);
         *scattered = Ray {o: p, d: scatter_direction.normalize(), s: r_in.s};
+        *attenuation = self.albedo.value(rec.uv, rec.p);
+        true
+    }
+}
+
+pub struct Lambert {
+    pub albedo: Arc<dyn Texture>,
+}
+
+impl Material for Lambert {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        let p = offset_hit_point(rec.p, rec.norm);
+        *scattered = Ray {o: p, d: random_in_hemisphere(rec.norm), s: r_in.s};
         *attenuation = self.albedo.value(rec.uv, rec.p);
         true
     }

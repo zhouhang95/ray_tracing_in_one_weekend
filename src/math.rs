@@ -120,7 +120,7 @@ pub fn smooth(v: Vec3A) -> Vec3A {
     v * v * (3. - 2. * v)
 }
 
-pub fn offset_ray(p: Vec3A, n: Vec3A) -> Vec3A {
+pub fn offset_hit_point(p: Vec3A, n: Vec3A) -> Vec3A {
     const ORIGIN: f32 = 1. / 32.;
     const INT_SCALE: f32 = 256.;
     const FLOAT_SCALE: f32 = 1. / 65536.;
