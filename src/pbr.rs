@@ -1,3 +1,4 @@
+use std::f32::consts::*;
 use std::sync::Arc;
 
 use glam::*;
@@ -63,6 +64,57 @@ impl Material for BurleyDiffuse {
 
         *scattered = Ray {o: p, d: dir_o, s: r_in.s};
         *attenuation = self.albedo.value(rec.uv, rec.p) * fd;
+        true
+    }
+}
+
+// normal distribution function
+fn gtr1(n_dot_h: f32, a: f32) -> f32 {
+    if a >= 1. {
+        return FRAC_1_PI;
+    }
+    let a2 = a * a;
+    let t = 1. + (a2 - 1.) * n_dot_h * n_dot_h;
+    (a2 - 1.) / (PI * a2.ln() * t)
+}
+
+fn gtr2(n_dot_h: f32, a: f32) -> f32 {
+    let a2 = a * a;
+    let t = 1. + (a2 - 1.) * n_dot_h * n_dot_h;
+    a2 / (PI * t * t)
+}
+
+// geometric distribution function
+fn smith_geo_ggx(n_dot_v: f32, alpha: f32) -> f32 {
+    let a = alpha * alpha;
+    let b = n_dot_v * n_dot_v;
+    1. / (n_dot_v + (a + b - a * b).sqrt())
+}
+
+
+pub struct Clearcoat {
+    pub clearcoat_gloss: f32,
+}
+
+impl Material for Clearcoat {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        let p = offset_hit_point(rec.p, rec.norm);
+        let dir_o = random_in_hemisphere(rec.norm);
+        let n_dot_l = rec.norm.dot(-r_in.d);
+        let n_dot_v = rec.norm.dot(dir_o);
+        let h = (dir_o - r_in.d).normalize();
+        let l_dot_h = h.dot(-r_in.d);
+        let n_dot_h = rec.norm.dot(h);
+
+        let fh = schlick_fresnel(l_dot_h);
+
+        let dr = gtr1(n_dot_h, lerp(0.1, 0.001, self.clearcoat_gloss));
+        let fr = lerp(0.04, 1.0, fh);
+        let gr = smith_geo_ggx(n_dot_l, 0.25) * smith_geo_ggx(n_dot_v, 0.25);
+        let cc = 0.25 * gr * fr * dr;
+
+        *scattered = Ray {o: p, d: dir_o, s: r_in.s};
+        *attenuation = Vec3A::splat(cc);
         true
     }
 }
