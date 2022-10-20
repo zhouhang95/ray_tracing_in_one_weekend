@@ -41,6 +41,9 @@ pub fn random_in_hemisphere(norm: Vec3A) -> Vec3A {
         -v
     }
 }
+pub fn random_on_hemisphere(norm: Vec3A) -> Vec3A {
+    random_in_hemisphere(norm).normalize()
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {

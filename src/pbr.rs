@@ -17,7 +17,7 @@ pub struct OrenNayar {
 impl Material for OrenNayar {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let p = offset_hit_point(rec.p, rec.norm);
-        let dir_o = random_in_hemisphere(rec.norm);
+        let dir_o = random_on_hemisphere(rec.norm);
         let cos_i = rec.norm.dot(r_in.d).abs();
         let cos_o = rec.norm.dot(dir_o);
         let sin_i = (1. - cos_i * cos_i).sqrt();
@@ -50,7 +50,7 @@ pub struct BurleyDiffuse {
 impl Material for BurleyDiffuse {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let p = offset_hit_point(rec.p, rec.norm);
-        let dir_o = random_in_hemisphere(rec.norm);
+        let dir_o = random_on_hemisphere(rec.norm);
         let n_dot_l = rec.norm.dot(-r_in.d);
         let n_dot_v = rec.norm.dot(dir_o);
         let h = (dir_o - r_in.d).normalize();
@@ -99,7 +99,7 @@ pub struct Clearcoat {
 impl Material for Clearcoat {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let p = offset_hit_point(rec.p, rec.norm);
-        let dir_o = random_in_hemisphere(rec.norm);
+        let dir_o = random_on_hemisphere(rec.norm);
         let n_dot_l = rec.norm.dot(-r_in.d);
         let n_dot_v = rec.norm.dot(dir_o);
         let h = (dir_o - r_in.d).normalize();
