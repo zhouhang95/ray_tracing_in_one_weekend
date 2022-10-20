@@ -66,11 +66,15 @@ pub fn refract(uv: Vec3A, n: Vec3A, etai_over_etat: f32) -> Vec3A {
     return r_out_perp + r_out_parallel;
 }
 
+pub fn schlick_fresnel(u: f32) -> f32 {
+    (1. - u).powi(5)
+}
+
 // Use Schlick's approximation for reflectance.
 pub fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
     let r0 = (1.-ref_idx) / (1.+ref_idx);
     let r0 = r0 * r0;
-    r0 + (1.-r0) * (1. - cosine).powi(5)
+    r0 + (1.-r0) * schlick_fresnel(cosine)
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -135,4 +139,8 @@ pub fn offset_hit_point(p: Vec3A, n: Vec3A) -> Vec3A {
     let y = if p.y.abs() < ORIGIN {p.y + n.y * FLOAT_SCALE} else {p_i_y};
     let z = if p.z.abs() < ORIGIN {p.z + n.z * FLOAT_SCALE} else {p_i_z};
     vec3a(x, y, z)
+}
+
+pub fn lerp(from: f32, to: f32, s: f32) -> f32 {
+    from + (to - from) * s
 }

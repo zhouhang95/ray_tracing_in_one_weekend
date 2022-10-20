@@ -39,3 +39,30 @@ impl Material for OrenNayar {
         true
     }
 }
+
+
+pub struct BurleyDiffuse {
+    pub albedo: Arc<dyn Texture>,
+    pub roughness: f32,
+}
+
+impl Material for BurleyDiffuse {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        let p = offset_hit_point(rec.p, rec.norm);
+        let dir_o = random_in_hemisphere(rec.norm);
+        let n_dot_l = rec.norm.dot(-r_in.d);
+        let n_dot_v = rec.norm.dot(dir_o);
+        let h = (dir_o - r_in.d).normalize();
+        let l_dot_h = h.dot(-r_in.d);
+
+        let fl = schlick_fresnel(n_dot_l);
+        let fv = schlick_fresnel(n_dot_v);
+
+        let fd90 = 0.5 + 2. * l_dot_h * l_dot_h * self.roughness;
+        let fd = lerp(1.0, fd90, fl) * lerp(1.0, fd90, fv);
+
+        *scattered = Ray {o: p, d: dir_o, s: r_in.s};
+        *attenuation = self.albedo.value(rec.uv, rec.p) * fd;
+        true
+    }
+}
