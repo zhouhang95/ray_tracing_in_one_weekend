@@ -61,7 +61,7 @@ fn main() {
     ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
     let samples_per_pixel = 128;
 
-    let nx = 400;
+    let nx = 800;
     let ny = 400;
     let aspect_ratio = nx as f32 / ny as f32;
 
@@ -69,7 +69,7 @@ fn main() {
 
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
-    let (world, cam) = final_scene(aspect_ratio);
+    let (world, cam) = test_sphere(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {
