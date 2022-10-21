@@ -228,7 +228,7 @@ fn build_bvh(world: &mut Vec<Arc<dyn Hitable>>) -> Vec<Arc<dyn Hitable>> {
 
 pub fn test_sphere(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     SKY_COLOR.set(sky_color).unwrap();
-    let ground = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.5, 0.5, 0.5)})});
+    let ground = Arc::new(Lambert { albedo: Arc::new(ConstantTex{ col: vec3a(0.5, 0.5, 0.5)})});
     let mut world: HitableList = vec![
         Arc::new(Sphere {c: vec3a( 0.0, -100.5, -1.0), r: 100., mat: ground.clone(), name: "Ground".to_string()}),
         Arc::new(Sphere {c: vec3a( 0.0, 0.0, -1.0), r: 0.5, mat: ground, name: "Test".to_string()}),

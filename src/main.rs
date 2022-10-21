@@ -36,6 +36,7 @@ use chrono::prelude::*;
 const MAX_DEPTH: i32 = 50;
 
 fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
+    assert!(vec3a_near_one(r.d));
     if depth > MAX_DEPTH {
         return Vec3A::ZERO;
     }

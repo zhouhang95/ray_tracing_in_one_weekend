@@ -10,6 +10,10 @@ pub fn vec3a_near_zero(v: Vec3A) -> bool {
     return (v.x.abs() < s) && (v.y.abs() < s) && (v.z.abs() < s);
 }
 
+pub fn vec3a_near_one(v: Vec3A) -> bool {
+    (v.length() - 1.).abs() < 1e-6
+}
+
 pub fn vec3a_random() -> Vec3A {
     RNG.with(|rng| {
         let x = rng.borrow_mut().gen::<f32>();

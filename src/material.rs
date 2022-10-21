@@ -52,8 +52,8 @@ pub struct Lambert {
 impl Material for Lambert {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let p = offset_hit_point(rec.p, rec.norm);
-        *scattered = Ray {o: p, d: random_in_hemisphere(rec.norm), s: r_in.s};
-        *attenuation = self.albedo.value(rec.uv, rec.p);
+        *scattered = Ray {o: p, d: random_on_hemisphere(rec.norm), s: r_in.s};
+        *attenuation = self.albedo.value(rec.uv, rec.p) * 2. * rec.norm.dot(scattered.d);
         true
     }
 }
