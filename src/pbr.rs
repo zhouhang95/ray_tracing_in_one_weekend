@@ -63,7 +63,7 @@ impl Material for BurleyDiffuse {
         let fd = lerp(1.0, fd90, fl) * lerp(1.0, fd90, fv);
 
         *scattered = Ray {o: p, d: dir_o, s: r_in.s};
-        *attenuation = self.albedo.value(rec.uv, rec.p) * fd;
+        *attenuation = self.albedo.value(rec.uv, rec.p) * fd * 2. * n_dot_v;
         true
     }
 }
