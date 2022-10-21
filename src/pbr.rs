@@ -36,7 +36,7 @@ impl Material for OrenNayar {
         let w = a + b * max_cos * sin_alpha * tan_beta;
 
         *scattered = Ray {o: p, d: dir_o, s: r_in.s};
-        *attenuation = self.albedo.value(rec.uv, rec.p) * w;
+        *attenuation = self.albedo.value(rec.uv, rec.p) * w * 2. * cos_o;
         true
     }
 }

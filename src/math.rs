@@ -35,6 +35,9 @@ pub fn random_in_unit_sphere() -> Vec3A {
         }
     }
 }
+pub fn random_on_unit_sphere() -> Vec3A {
+    random_in_unit_sphere().normalize()
+}
 
 #[allow(dead_code)]
 pub fn random_in_hemisphere(norm: Vec3A) -> Vec3A {
