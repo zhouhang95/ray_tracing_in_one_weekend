@@ -51,19 +51,19 @@ impl Material for BurleyDiffuse {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let p = offset_hit_point(rec.p, rec.norm);
         let dir_o = random_on_hemisphere(rec.norm);
-        let n_dot_l = rec.norm.dot(-r_in.d);
-        let n_dot_v = rec.norm.dot(dir_o);
+        let n_dot_i = rec.norm.dot(-r_in.d);
+        let n_dot_o = rec.norm.dot(dir_o);
         let h = (dir_o - r_in.d).normalize();
-        let l_dot_h = h.dot(-r_in.d);
+        let h_dot_o = h.dot(dir_o);
 
-        let fl = schlick_fresnel(n_dot_l);
-        let fv = schlick_fresnel(n_dot_v);
+        let fl = schlick_fresnel(n_dot_o);
+        let fv = schlick_fresnel(n_dot_i);
 
-        let fd90 = 0.5 + 2. * l_dot_h * l_dot_h * self.roughness;
+        let fd90 = 0.5 + 2. * h_dot_o * h_dot_o * self.roughness;
         let fd = lerp(1.0, fd90, fl) * lerp(1.0, fd90, fv);
 
         *scattered = Ray {o: p, d: dir_o, s: r_in.s};
-        *attenuation = self.albedo.value(rec.uv, rec.p) * fd * 2. * n_dot_v;
+        *attenuation = self.albedo.value(rec.uv, rec.p) * fd * 2. * n_dot_o;
         true
     }
 }
