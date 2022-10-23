@@ -213,7 +213,72 @@ impl Material for DisneyDiffuse {
         true
     }
 }
+pub struct DisneyMetal {
+    pub albedo: Arc<dyn Texture>,
+    pub roughness: f32,
+    pub anisotropic: f32,
+}
 
+
+impl Material for DisneyMetal {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        let p = offset_hit_point(rec.p, rec.norm);
+        let dir_o = random_on_hemisphere(rec.norm);
+        let n_dot_i = rec.norm.dot(-r_in.d);
+        let n_dot_o = rec.norm.dot(dir_o);
+        let h = (dir_o - r_in.d).normalize();
+        let h_dot_o = h.dot(dir_o);
+
+        let albedo = self.albedo.value(rec.uv, rec.p);
+
+
+        let fm = Vec3A::ONE.lerp(albedo, schlick_fresnel(h_dot_o));
+
+        let aspect = (1. - 0.9 * self.anisotropic).sqrt();
+        let alpha_min = 0.0001;
+        let alpha_x = (self.roughness * self.roughness / aspect).max(alpha_min);
+        let alpha_y = (self.roughness * self.roughness * aspect).max(alpha_min);
+
+        let h_local = Vec3A::ONE;
+
+        // let factor =
+        // let dm = 1. / (alpha_x * alpha_y * ().powi(2)) * FRAC_1_PI;
+
+
+        *scattered = Ray {o: p, d: dir_o, s: r_in.s};
+        true
+    }
+}
+
+
+pub struct DisneySheen {
+    pub albedo: Arc<dyn Texture>,
+    pub tint: f32,
+}
+
+impl Material for DisneySheen {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        let p = offset_hit_point(rec.p, rec.norm);
+        let dir_o = random_on_hemisphere(rec.norm);
+        let n_dot_i = rec.norm.dot(-r_in.d);
+        let n_dot_o = rec.norm.dot(dir_o);
+        let h = (dir_o - r_in.d).normalize();
+        let h_dot_i = h.dot(-r_in.d);
+        let h_dot_o = h.dot(dir_o);
+        let n_dot_h = rec.norm.dot(h);
+
+        let albedo = self.albedo.value(rec.uv, rec.p);
+
+        let luminance = vec3a(0.3, 0.6, 0.1).dot(albedo);
+        let c_tint = if luminance > 0. { albedo / luminance } else { Vec3A::ONE };
+        let c_sheen = Vec3A::ONE.lerp(c_tint, self.tint);
+        let f_sheen = c_sheen * schlick_fresnel(h_dot_o);
+
+        *scattered = Ray {o: p, d: dir_o, s: r_in.s};
+        *attenuation = f_sheen * n_dot_o * 2. * PI;
+        true
+    }
+}
 
 pub struct Clearcoat {
     pub clearcoat_gloss: f32,
