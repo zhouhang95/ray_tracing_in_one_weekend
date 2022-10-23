@@ -181,6 +181,40 @@ impl Material for RoughPlastic {
 }
 
 
+pub struct DisneyDiffuse {
+    pub albedo: Arc<dyn Texture>,
+    pub roughness: f32,
+    pub subsurface: f32,
+}
+
+impl Material for DisneyDiffuse {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
+        let p = offset_hit_point(rec.p, rec.norm);
+        let dir_o = random_on_hemisphere(rec.norm);
+        let n_dot_i = rec.norm.dot(-r_in.d);
+        let n_dot_o = rec.norm.dot(dir_o);
+        let h = (dir_o - r_in.d).normalize();
+        let h_dot_o = h.dot(dir_o);
+
+        let fo = schlick_fresnel(n_dot_o);
+        let fi = schlick_fresnel(n_dot_i);
+
+        let fd90 = 0.5 + 2. * h_dot_o * h_dot_o * self.roughness;
+        let fd = lerp(1.0, fd90, fo) * lerp(1.0, fd90, fi);
+
+        let fss90 = self.roughness * h_dot_o * h_dot_o;
+        let fss_wi = lerp(1., fss90, fi);
+        let fss_wo = lerp(1., fss90, fo);
+        let fss = 1.25 * (fss_wi * fss_wo * (1. / (n_dot_i + n_dot_o) - 0.5) + 0.5);
+
+
+        *scattered = Ray {o: p, d: dir_o, s: r_in.s};
+        *attenuation = self.albedo.value(rec.uv, rec.p) * lerp(fd, fss, self.subsurface) * 2. * n_dot_o;
+        true
+    }
+}
+
+
 pub struct Clearcoat {
     pub clearcoat_gloss: f32,
 }
