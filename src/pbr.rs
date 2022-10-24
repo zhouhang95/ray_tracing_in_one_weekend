@@ -225,6 +225,7 @@ pub struct DisneyMetal {
     pub albedo: Arc<dyn Texture>,
     pub roughness: f32,
     pub anisotropic: f32,
+    pub rot: f32,
 }
 
 
@@ -248,11 +249,13 @@ impl Material for DisneyMetal {
             let ax = (self.roughness * self.roughness / aspect).max(alpha_min);
             let ay = (self.roughness * self.roughness * aspect).max(alpha_min);
 
-            let h_local = rec.world_to_local(h);
+            let rot = self.rot * 2. * PI;
+
+            let h_local = rec.world_to_local_with_rot(h, rot);
             let dm = gtr2_ansio(h_local, ax, ay);
 
-            let i_local = rec.world_to_local(-r_in.d);
-            let o_local = rec.world_to_local(dir_o);
+            let i_local = rec.world_to_local_with_rot(-r_in.d, rot);
+            let o_local = rec.world_to_local_with_rot(dir_o, rot);
 
             let gm = smith_geo_ggx_aniso(i_local, ax, ay) * smith_geo_ggx_aniso(o_local, ax, ay);
 

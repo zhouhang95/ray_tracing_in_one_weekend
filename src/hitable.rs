@@ -34,6 +34,11 @@ impl HitRecord {
         let bitang = self.norm.cross(self.tang);
         vec3a(v.dot(self.tang), v.dot(bitang), v.dot(self.norm))
     }
+    pub fn world_to_local_with_rot(&self, v: Vec3A, rot: f32) -> Vec3A {
+        let tang = rot.cos() * self.tang - rot.sin() * self.norm.cross(self.tang);
+        let bitang = self.norm.cross(tang);
+        vec3a(v.dot(tang), v.dot(bitang), v.dot(self.norm))
+    }
 }
 
 impl std::fmt::Display for HitRecord {
