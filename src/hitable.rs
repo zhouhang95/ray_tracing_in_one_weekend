@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 
 use glam::*;
+use image::flat::NormalForm;
 use rand::Rng;
 
 use crate::math::*;
@@ -13,6 +14,7 @@ use crate::texture::Texture;
 pub struct HitRecord {
     pub p: Vec3A,
     pub norm: Vec3A,
+    pub tang: Vec3A,
     pub t: f32,
     pub front_face: bool,
     pub mat: Option<Arc<dyn Material>>,
@@ -27,6 +29,10 @@ impl HitRecord {
         } else {
             -outward_normal
         };
+    }
+    pub fn world_to_local(&self, v: Vec3A) -> Vec3A {
+        let bitang = self.norm.cross(self.tang);
+        vec3a(v.dot(self.tang), v.dot(bitang), v.dot(self.norm))
     }
 }
 
@@ -82,6 +88,7 @@ impl Hitable for Sphere {
         rec.t = root;
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - self.c) / self.r;
+        rec.tang = Vec3A::Y.cross(outward_normal).normalize();
         rec.set_face_normal(r, outward_normal);
         rec.uv = Sphere::get_uv(outward_normal);
         rec.mat = Some(self.mat.clone());

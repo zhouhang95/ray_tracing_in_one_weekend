@@ -84,11 +84,19 @@ fn gtr2(n_dot_h: f32, a: f32) -> f32 {
     a2 / (PI * t * t)
 }
 
+fn gtr2_ansio(h_local: Vec3A, ax: f32, ay: f32) -> f32 {
+    1. / (PI * ax * ay * ((h_local.x / ax).powi(2) + (h_local.y / ay).powi(2) + h_local.z * h_local.z).powi(2))
+}
+
 // geometric distribution function
 fn smith_geo_ggx(n_dot_v: f32, alpha: f32) -> f32 {
     let a = alpha * alpha;
     let b = n_dot_v * n_dot_v;
     1. / (n_dot_v + (a + b - a * b).sqrt())
+}
+
+fn smith_geo_ggx_aniso(v_local: Vec3A, ax: f32, ay: f32) -> f32 {
+    1. / (v_local.z + ((v_local.x * ax).powi(2) + (v_local.y * ay).powi(2) + v_local.z * v_local.z).sqrt())
 }
 
 /// Fresnel equation of a dielectric interface.
@@ -228,24 +236,40 @@ impl Material for DisneyMetal {
         let n_dot_o = rec.norm.dot(dir_o);
         let h = (dir_o - r_in.d).normalize();
         let h_dot_o = h.dot(dir_o);
+        let n_dot_h = rec.norm.dot(h);
 
         let albedo = self.albedo.value(rec.uv, rec.p);
 
-
-        let fm = Vec3A::ONE.lerp(albedo, schlick_fresnel(h_dot_o));
-
-        let aspect = (1. - 0.9 * self.anisotropic).sqrt();
+        let fm = albedo.lerp(Vec3A::ONE, schlick_fresnel(h_dot_o));
         let alpha_min = 0.0001;
-        let alpha_x = (self.roughness * self.roughness / aspect).max(alpha_min);
-        let alpha_y = (self.roughness * self.roughness * aspect).max(alpha_min);
 
-        let h_local = Vec3A::ONE;
+        let (dm, gm) = if self.anisotropic > -10. {
+            let aspect = (1. - 0.9 * self.anisotropic).sqrt();
+            let ax = (self.roughness * self.roughness / aspect).max(alpha_min);
+            let ay = (self.roughness * self.roughness * aspect).max(alpha_min);
 
-        // let factor =
-        // let dm = 1. / (alpha_x * alpha_y * ().powi(2)) * FRAC_1_PI;
+            let h_local = rec.world_to_local(h);
+            let dm = gtr2_ansio(h_local, ax, ay);
 
+            let i_local = rec.world_to_local(-r_in.d);
+            let o_local = rec.world_to_local(dir_o);
+
+            let gm = smith_geo_ggx_aniso(i_local, ax, ay) * smith_geo_ggx_aniso(o_local, ax, ay);
+
+            (dm, gm)
+        } else {
+            let r2 = (self.roughness * self.roughness).max(alpha_min);
+            let dm = gtr2(n_dot_h, r2);
+
+            let gm = smith_geo_ggx(n_dot_i, r2) * smith_geo_ggx(n_dot_o, r2);
+
+            (dm, gm)
+        };
+
+        let metal_w = fm * dm * gm;
 
         *scattered = Ray {o: p, d: dir_o, s: r_in.s};
+        *attenuation = metal_w * n_dot_o * 2. * PI;
         true
     }
 }
