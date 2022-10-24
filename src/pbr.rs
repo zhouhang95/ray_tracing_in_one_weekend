@@ -280,29 +280,29 @@ impl Material for DisneySheen {
     }
 }
 
-pub struct Clearcoat {
+pub struct DisneyClearcoat {
     pub clearcoat_gloss: f32,
 }
 
-impl Material for Clearcoat {
+impl Material for DisneyClearcoat {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray) -> bool {
         let p = offset_hit_point(rec.p, rec.norm);
         let dir_o = random_on_hemisphere(rec.norm);
-        let n_dot_l = rec.norm.dot(-r_in.d);
-        let n_dot_v = rec.norm.dot(dir_o);
+        let n_dot_i = rec.norm.dot(-r_in.d);
+        let n_dot_o = rec.norm.dot(dir_o);
         let h = (dir_o - r_in.d).normalize();
-        let l_dot_h = h.dot(-r_in.d);
+        let h_dot_i = h.dot(-r_in.d);
+        let h_dot_o = h.dot(dir_o);
         let n_dot_h = rec.norm.dot(h);
 
-        let fh = schlick_fresnel(l_dot_h);
+        let fc = lerp(0.4, 1., schlick_fresnel(h_dot_o));
+        let dc = gtr1(n_dot_h, lerp(0.1, 0.001, self.clearcoat_gloss));
+        let gc = smith_geo_ggx(n_dot_i, 0.25) * smith_geo_ggx(n_dot_o, 0.25);
 
-        let dr = gtr1(n_dot_h, lerp(0.1, 0.001, self.clearcoat_gloss));
-        let fr = lerp(0.04, 1.0, fh);
-        let gr = smith_geo_ggx(n_dot_l, 0.25) * smith_geo_ggx(n_dot_v, 0.25);
-        let cc = 0.25 * gr * fr * dr;
+        let cc = 0.25 * fc * dc * gc;
 
         *scattered = Ray {o: p, d: dir_o, s: r_in.s};
-        *attenuation = Vec3A::splat(cc);
+        *attenuation = Vec3A::splat(cc) * n_dot_o * 2. * PI;
         true
     }
 }
