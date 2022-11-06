@@ -38,14 +38,15 @@ pub struct Diffuse {
 
 impl Material for Diffuse {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray, pdf: &mut f32) -> bool {
-        let mut scatter_direction = random_on_hemisphere(rec.norm);
+        let uvw = ONB::build_from_w(rec.norm);
+        let mut scatter_direction = uvw.local(random_cosine_dir());
         if vec3a_near_zero(scatter_direction) {
             scatter_direction = rec.norm;
         }
         let p = offset_hit_point(rec.p, rec.norm);
         *scattered = Ray {o: p, d: scatter_direction.normalize(), s: r_in.s};
         *attenuation = self.albedo.value(rec.uv, rec.p);
-        *pdf = 0.5 * FRAC_1_PI;
+        *pdf = rec.norm.dot(scattered.d) * FRAC_1_PI;
         true
     }
     fn scatter_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 {

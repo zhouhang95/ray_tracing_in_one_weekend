@@ -74,7 +74,7 @@ pub fn random_cosine_dir() -> Vec3A {
     let x = phi.cos() * r2_sqrt;
     let y = phi.sin() * r2_sqrt;
 
-    vec3a(x, y, z)
+    vec3a(x, y, z).normalize()
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -178,4 +178,31 @@ pub fn offset_hit_point(p: Vec3A, n: Vec3A) -> Vec3A {
 
 pub fn lerp(from: f32, to: f32, s: f32) -> f32 {
     from + (to - from) * s
+}
+
+pub struct ONB {
+    pub u: Vec3A,
+    pub v: Vec3A,
+    pub w: Vec3A,
+}
+
+
+impl ONB {
+    pub fn local(&self, v: Vec3A) -> Vec3A {
+        v.x * self.u + v.y * self.v + v.z * self.w
+    }
+
+    pub fn build_from_w(n: Vec3A) -> Self {
+        let w = n;
+        let a = if w.x.abs() > 0.9 {
+            Vec3A::Y
+        } else {
+            Vec3A::X
+        };
+        let v = w.cross(a);
+        let u = v.cross(w);
+        Self {
+            u, v, w,
+        }
+    }
 }
