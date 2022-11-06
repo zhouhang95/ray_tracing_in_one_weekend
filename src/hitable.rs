@@ -6,7 +6,7 @@ use image::flat::NormalForm;
 use rand::Rng;
 
 use crate::math::*;
-use crate::material::{Material, Isotropic};
+use crate::material::Material;
 use crate::lib::RNG;
 use crate::texture::Texture;
 
@@ -519,70 +519,3 @@ impl Hitable for RotateY {
     }
 }
 
-
-pub struct ConstantMedium {
-    boundary: Arc<dyn Hitable>,
-    phase_fn: Arc<dyn Material>,
-    neg_inv_density: f32,
-}
-
-impl ConstantMedium {
-    pub fn new(boundary: Arc<dyn Hitable>, density: f32, phase_fn: Arc<dyn Texture>) -> Self {
-        Self { boundary, phase_fn: Arc::new(Isotropic{albedo: phase_fn}), neg_inv_density: -1./density }
-    }
-}
-
-impl Hitable for ConstantMedium {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        const ENABLE_DEBUGGING: bool = false;
-        let debugging: bool = ENABLE_DEBUGGING && RNG.with(|rng| rng.borrow_mut().gen::<f32>() < 0.00001);
-        let mut rec_1 = HitRecord::default();
-        if !self.boundary.hit(r, f32::NEG_INFINITY, f32::INFINITY, &mut rec_1) {
-            return false;
-        }
-        let mut rec_2 = HitRecord::default();
-        if !self.boundary.hit(r, rec_1.t + 0.0001, f32::INFINITY, &mut rec_2) {
-            return false;
-        }
-        if debugging {
-            eprintln!("t0: {}, t1: {}", rec_1.t, rec_2.t);
-        }
-        if rec_1.t < t_min {
-            rec_1.t = t_min;
-        }
-        if rec_2.t > t_max {
-            rec_2.t = t_max;
-        }
-        if rec_1.t >= rec_2.t {
-            return false;
-        }
-        if rec_1.t < 0. {
-            rec_1.t = 0.;
-        }
-        let ray_len = r.d.length();
-        let dist_inside_boundary = (rec_2.t - rec_1.t) * ray_len;
-        let hit_dist = self.neg_inv_density * RNG.with(|rng| rng.borrow_mut().gen::<f32>()).ln();
-        if hit_dist > dist_inside_boundary {
-            return false;
-        }
-        rec.t = rec_1.t + hit_dist / ray_len;
-        rec.p = r.at(rec.t);
-
-        if debugging {
-            eprintln!("hit_dist: {}, rec.t: {}, rec.t: {}", hit_dist, rec.t, rec.p);
-        }
-        rec.norm = Vec3A::X;
-        rec.front_face = true;
-        rec.mat = Some(self.phase_fn.clone());
-
-        true
-    }
-
-    fn bbox(&self, aabb: &mut AABB) -> bool {
-        self.boundary.bbox(aabb)
-    }
-
-    fn memo(&self) -> String {
-        todo!()
-    }
-}
