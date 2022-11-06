@@ -1,4 +1,5 @@
 use std::mem::transmute;
+use std::f32::consts::PI;
 
 use glam::*;
 use rand::Rng;
@@ -12,6 +13,14 @@ pub fn vec3a_near_zero(v: Vec3A) -> bool {
 
 pub fn vec3a_near_one(v: Vec3A) -> bool {
     (v.length() - 1.).abs() < 1e-6
+}
+
+pub fn vec2_random() -> Vec2 {
+    RNG.with(|rng| {
+        let x = rng.borrow_mut().gen::<f32>();
+        let y = rng.borrow_mut().gen::<f32>();
+        vec2(x, y)
+    })
 }
 
 pub fn vec3a_random() -> Vec3A {
@@ -50,6 +59,22 @@ pub fn random_in_hemisphere(norm: Vec3A) -> Vec3A {
 }
 pub fn random_on_hemisphere(norm: Vec3A) -> Vec3A {
     random_in_hemisphere(norm).normalize()
+}
+
+pub fn random_cosine_dir() -> Vec3A {
+    let v = vec2_random();
+    let r1 = v[0];
+    let r2 = v[1];
+
+    let r2_sqrt = r2.sqrt();
+
+    let z = (1. - r2).sqrt();
+
+    let phi = 2. * PI * r1;
+    let x = phi.cos() * r2_sqrt;
+    let y = phi.sin() * r2_sqrt;
+
+    vec3a(x, y, z)
 }
 
 #[derive(Debug, Clone, Copy)]
