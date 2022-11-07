@@ -3,7 +3,7 @@
 use std::sync::mpsc::channel;
 
 use image::{ImageBuffer, RgbImage, Rgb};
-use glam::Vec3A;
+use glam::*;
 
 mod math;
 use math::*;
@@ -46,11 +46,21 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
         let mut pdf = 0.;
         let mut ret = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
-            // let russian_roulette = RNG.with(|rng| rng.borrow_mut().gen::<f32>());
-            // let threshold = attenuation.max_element();
-            // if russian_roulette < threshold {
-            //     ret += attenuation * ray_color(scattered, &world, depth+1) / threshold;
-            // }
+            let on_light = vec3a(random_range(213., 343.), 554., random_range(227.,332.));
+            let to_light = on_light - rec.p;
+            let dist_len2 = to_light.length_squared();
+            let light_dir = to_light.normalize();
+            if light_dir.dot(rec.norm) < 0. {
+                return ret;
+            }
+            let light_area = (343. - 213.) * (332. - 227.);
+            let light_cosine = light_dir.y.abs();
+            if light_cosine < 0.000001 {
+                return ret;
+            }
+            pdf = dist_len2 / (light_area * light_cosine);
+            scattered = Ray {o: rec.p, d: light_dir, s: r.s};
+
             ret += attenuation * ray_color(scattered, &world, depth+1) / pdf * rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
         }
         ret

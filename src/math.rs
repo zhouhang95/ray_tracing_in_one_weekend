@@ -32,6 +32,12 @@ pub fn vec3a_random() -> Vec3A {
     })
 }
 
+pub fn random_range(min: f32, max: f32) -> f32 {
+    RNG.with(|rng| {
+        rng.borrow_mut().gen_range(min..max)
+    })
+}
+
 pub fn vec3a_random_range(min: f32, max: f32) -> Vec3A{
     vec3a_random() * (max - min) + min
 }
