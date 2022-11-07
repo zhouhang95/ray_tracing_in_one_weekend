@@ -1,5 +1,5 @@
 use std::mem::transmute;
-use std::f32::consts::PI;
+use std::f32::consts::{PI, FRAC_1_PI};
 
 use glam::*;
 use rand::Rng;
@@ -210,5 +210,32 @@ impl ONB {
         Self {
             u, v, w,
         }
+    }
+}
+
+pub trait PDF {
+    fn value(&self, dir: Vec3A) -> f32;
+    fn gen(&self) -> Vec3A;
+}
+
+pub struct CosinePDF {
+    pub uvw: ONB,
+}
+
+impl CosinePDF {
+    pub fn new(w: Vec3A) -> Self {
+        Self {
+            uvw: ONB::build_from_w(w)
+        }
+    }
+}
+
+impl PDF for CosinePDF {
+    fn value(&self, dir: Vec3A) -> f32 {
+        dir.dot(self.uvw.w).max(0.) * FRAC_1_PI
+    }
+
+    fn gen(&self) -> Vec3A {
+        self.uvw.local(random_cosine_dir()).normalize()
     }
 }

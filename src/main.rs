@@ -46,20 +46,9 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
         let mut pdf = 0.;
         let mut ret = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
-            let on_light = vec3a(random_range(213., 343.), 554., random_range(227.,332.));
-            let to_light = on_light - rec.p;
-            let dist_len2 = to_light.length_squared();
-            let light_dir = to_light.normalize();
-            if light_dir.dot(rec.norm) < 0. {
-                return ret;
-            }
-            let light_area = (343. - 213.) * (332. - 227.);
-            let light_cosine = light_dir.y.abs();
-            if light_cosine < 0.000001 {
-                return ret;
-            }
-            pdf = dist_len2 / (light_area * light_cosine);
-            scattered = Ray {o: rec.p, d: light_dir, s: r.s};
+            let cos_pdf = CosinePDF::new(rec.norm);
+            scattered = Ray {o: rec.p, d: cos_pdf.gen(), s: r.s};
+            pdf = cos_pdf.value(scattered.d);
 
             ret += attenuation * ray_color(scattered, &world, depth+1) / pdf * rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
         }
