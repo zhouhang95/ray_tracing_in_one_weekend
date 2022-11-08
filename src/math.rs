@@ -91,7 +91,7 @@ pub fn random_cosine_dir() -> Vec3A {
     vec3a(x, y, z).normalize()
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Ray {
     pub o: Vec3A,
     pub d: Vec3A,

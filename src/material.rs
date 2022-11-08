@@ -8,8 +8,20 @@ use crate::hitable::HitRecord;
 use crate::texture::Texture;
 use crate::lib::RNG;
 
+pub struct ScatterRecord {
+    pub spec_ray: Ray,
+    pub is_spec: bool,
+    pub attenuation: Vec3A,
+    pub pdf: Option<Arc<dyn PDF>>,
+}
+
+impl Default for ScatterRecord {
+    fn default() -> Self {
+        Self { spec_ray: Default::default(), is_spec: false, attenuation: Vec3A::ONE, pdf: None }
+    }
+}
 pub trait Material: Send + Sync {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray, pdf: &mut f32) -> bool;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool;
     fn scatter_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 {
         0.
     }
@@ -23,7 +35,7 @@ pub struct Emission {
 }
 
 impl Material for Emission {
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _attenuation: &mut Vec3A, _scattered: &mut Ray, _pdf: &mut f32) -> bool {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _srec: &mut ScatterRecord) -> bool {
         false
     }
 
@@ -37,16 +49,11 @@ pub struct Diffuse {
 }
 
 impl Material for Diffuse {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Vec3A, scattered: &mut Ray, pdf: &mut f32) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         let uvw = ONB::build_from_w(rec.norm);
-        let mut scatter_direction = uvw.local(random_cosine_dir());
-        if vec3a_near_zero(scatter_direction) {
-            scatter_direction = rec.norm;
-        }
-        let p = offset_hit_point(rec.p, rec.norm);
-        *scattered = Ray {o: p, d: scatter_direction.normalize(), s: r_in.s};
-        *attenuation = self.albedo.value(rec.uv, rec.p);
-        *pdf = rec.norm.dot(scattered.d) * FRAC_1_PI;
+        srec.is_spec = false;
+        srec.attenuation = self.albedo.value(rec.uv, rec.p);
+        srec.pdf = Some(Arc::new(CosinePDF{ uvw }));
         true
     }
     fn scatter_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 {
