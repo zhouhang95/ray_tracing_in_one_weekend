@@ -47,8 +47,8 @@ fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) 
         let mut pdf = 0.;
         let mut ret = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
-            let on_light = vec3a(random_range(213., 343.), 554., random_range(227.,332.));
-            let to_light = on_light - rec.p;
+            let light_pdf = HitablePDF{ o: rec.p, ptr: light.clone() };
+            let to_light = light_pdf.gen();
             let dist_len2 = to_light.length_squared();
             let light_dir = to_light.normalize();
             if light_dir.dot(rec.norm) < 0. {
