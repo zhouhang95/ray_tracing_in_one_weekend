@@ -336,7 +336,7 @@ impl Hitable for XZRect {
         let xyz_len = self.max - self.min;
         let area = xyz_len.x * xyz_len.z;
         let distance_squared = rec.t * rec.t;
-        let cosine = dir.dot(rec.norm);
+        let cosine = dir.dot(rec.norm).abs();
 
         distance_squared / (cosine * area)
     }

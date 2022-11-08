@@ -49,18 +49,12 @@ fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) 
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
             let light_pdf = HitablePDF{ o: rec.p, ptr: light.clone() };
             let to_light = light_pdf.gen();
-            let dist_len2 = to_light.length_squared();
             let light_dir = to_light.normalize();
             if light_dir.dot(rec.norm) < 0. {
                 return ret;
             }
-            let light_area = (343. - 213.) * (332. - 227.);
-            let light_cosine = light_dir.y.abs();
-            if light_cosine < 0.000001 {
-                return ret;
-            }
-            pdf = dist_len2 / (light_area * light_cosine);
             scattered = Ray {o: rec.p, d: light_dir, s: r.s};
+            pdf = light_pdf.value(light_dir);
             ret += attenuation * ray_color(scattered, &world, light, depth+1) / pdf * rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
         }
         ret
