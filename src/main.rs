@@ -47,11 +47,12 @@ fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) 
         let mut pdf = 0.;
         let mut ret = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
-            let light_pdf = HitablePDF{ o: rec.p, ptr: light.clone() };
-            let to_light = light_pdf.gen();
-            let light_dir = to_light.normalize();
+            let cosine_pdf = Arc::new(CosinePDF { uvw: ONB::build_from_w(rec.norm) });
+            let light_pdf = Arc::new(HitablePDF{ o: rec.p, ptr: light.clone() });
+            let mix_pdf = MixPDF { p0: cosine_pdf, p1: light_pdf, mix: 0.5 };
+            let light_dir = mix_pdf.gen();
             scattered = Ray {o: rec.p, d: light_dir, s: r.s};
-            pdf = light_pdf.value(light_dir);
+            pdf = mix_pdf.value(light_dir);
             let pdf_value = rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
             if pdf_value == 0. {
                 return ret;

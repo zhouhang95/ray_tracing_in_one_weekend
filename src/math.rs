@@ -17,6 +17,12 @@ pub fn vec3a_near_one(v: Vec3A) -> bool {
     (v.length() - 1.).abs() < 1e-6
 }
 
+pub fn f32_random() -> f32 {
+    RNG.with(|rng| {
+        rng.borrow_mut().gen()
+    })
+}
+
 pub fn vec2_random() -> Vec2 {
     RNG.with(|rng| {
         let x = rng.borrow_mut().gen::<f32>();
@@ -253,6 +259,27 @@ impl PDF for HitablePDF {
     }
 
     fn gen(&self) -> Vec3A {
-        self.ptr.random(self.o)
+        self.ptr.random(self.o).normalize()
+    }
+}
+
+
+pub struct MixPDF {
+    pub p0: Arc<dyn PDF>,
+    pub p1: Arc<dyn PDF>,
+    pub mix: f32,
+}
+
+impl PDF for MixPDF {
+    fn value(&self, dir: Vec3A) -> f32 {
+        lerp(self.p0.value(dir), self.p1.value(dir), self.mix)
+    }
+
+    fn gen(&self) -> Vec3A {
+        if f32_random() > self.mix {
+            self.p0.gen()
+        } else {
+            self.p1.gen()
+        }
     }
 }
