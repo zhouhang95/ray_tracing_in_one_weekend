@@ -50,12 +50,13 @@ fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) 
             let light_pdf = HitablePDF{ o: rec.p, ptr: light.clone() };
             let to_light = light_pdf.gen();
             let light_dir = to_light.normalize();
-            if light_dir.dot(rec.norm) < 0. {
-                return ret;
-            }
             scattered = Ray {o: rec.p, d: light_dir, s: r.s};
             pdf = light_pdf.value(light_dir);
-            ret += attenuation * ray_color(scattered, &world, light, depth+1) / pdf * rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
+            let pdf_value = rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
+            if pdf_value == 0. {
+                return ret;
+            }
+            ret += attenuation * ray_color(scattered, &world, light, depth+1) * (pdf_value / pdf);
         }
         ret
     } else {
