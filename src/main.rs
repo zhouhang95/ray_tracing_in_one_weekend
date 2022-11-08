@@ -1,5 +1,6 @@
 #![cfg_attr(debug_assertions, allow(dead_code, unused_imports, unused_variables, unused_mut))]
 
+use std::sync::Arc;
 use std::sync::mpsc::channel;
 
 use image::{ImageBuffer, RgbImage, Rgb};
@@ -34,7 +35,7 @@ use chrono::prelude::*;
 
 const MAX_DEPTH: i32 = 50;
 
-fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
+fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) -> Vec3A {
     assert!(vec3a_near_one(r.d));
     if depth > MAX_DEPTH {
         return Vec3A::ZERO;
@@ -46,11 +47,21 @@ fn ray_color(r: Ray, world: &HitableList, depth: i32) -> Vec3A {
         let mut pdf = 0.;
         let mut ret = rec.mat.as_ref().unwrap().emitted(rec.uv, rec.p);
         if rec.mat.as_ref().unwrap().scatter(&r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
-            let cos_pdf = CosinePDF::new(rec.norm);
-            scattered = Ray {o: rec.p, d: cos_pdf.gen(), s: r.s};
-            pdf = cos_pdf.value(scattered.d);
-
-            ret += attenuation * ray_color(scattered, &world, depth+1) / pdf * rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
+            let on_light = vec3a(random_range(213., 343.), 554., random_range(227.,332.));
+            let to_light = on_light - rec.p;
+            let dist_len2 = to_light.length_squared();
+            let light_dir = to_light.normalize();
+            if light_dir.dot(rec.norm) < 0. {
+                return ret;
+            }
+            let light_area = (343. - 213.) * (332. - 227.);
+            let light_cosine = light_dir.y.abs();
+            if light_cosine < 0.000001 {
+                return ret;
+            }
+            pdf = dist_len2 / (light_area * light_cosine);
+            scattered = Ray {o: rec.p, d: light_dir, s: r.s};
+            ret += attenuation * ray_color(scattered, &world, light, depth+1) / pdf * rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
         }
         ret
     } else {
@@ -70,12 +81,13 @@ fn main() {
 
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
-    let (world, cam) = book3(aspect_ratio);
+    let (world, light, cam) = book3(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {
         let tx = tx.clone();
         let world = world.clone();
+        let light = light.clone();
         pool.execute(move || {
             RNG.with(|rng| {
                 *rng.borrow_mut() = SmallRng::seed_from_u64(95 + i as u64);
@@ -92,7 +104,7 @@ fn main() {
                     }
                 });
                 for r in rays {
-                    c += ray_color(r, &world, 0);
+                    c += ray_color(r, &world, &light, 0);
                 }
                 c /= samples_per_pixel as f32;
                 c = c.powf(1.0 / 2.0);

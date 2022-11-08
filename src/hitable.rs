@@ -1,3 +1,4 @@
+use std::default;
 use std::f32::consts::PI;
 use std::sync::Arc;
 
@@ -51,6 +52,12 @@ pub trait Hitable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
     fn bbox(&self, aabb: &mut AABB) -> bool;
     fn memo(&self) -> String;
+    fn pdf_value(&self, o: Vec3A, v: Vec3A) -> f32 {
+        0.
+    }
+    fn random(&self, o: Vec3A) -> Vec3A {
+        Vec3A::X
+    }
 }
 
 #[derive(Clone)]
@@ -318,6 +325,27 @@ impl Hitable for XZRect {
     }
     fn memo(&self) -> String {
         "XZRect".into()
+    }
+    fn pdf_value(&self, o: Vec3A, v: Vec3A) -> f32 {
+        let mut rec = HitRecord::default();
+        let dir = v.normalize();
+        let r = &Ray { o, d: dir, s: Vec2::ZERO };
+        if !self.hit(r, 0.001, f32::INFINITY, &mut rec) {
+            return 0.;
+        }
+        let xyz_len = self.max - self.min;
+        let area = xyz_len.x * xyz_len.z;
+        let distance_squared = rec.t * rec.t;
+        let cosine = dir.dot(rec.norm);
+
+        distance_squared / (cosine * area)
+    }
+    fn random(&self, o: Vec3A) -> Vec3A {
+        vec3a(
+            random_range(self.min.x, self.max.x),
+            self.min.y,
+            random_range(self.min.z, self.max.z),
+        ) - o
     }
 }
 

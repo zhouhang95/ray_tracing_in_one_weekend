@@ -39,7 +39,7 @@ fn build_bvh(world: &mut Vec<Arc<dyn Hitable>>) -> Vec<Arc<dyn Hitable>> {
     vec![bvh]
 }
 
-pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
+pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Arc<dyn Hitable>, Camera) {
     SKY_COLOR.set(black_sky).unwrap();
 
     let red = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.65, 0.05, 0.05)})});
@@ -54,8 +54,10 @@ pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
     let box_2 = Arc::new(RotateY::new(box_2, -18.));
     let box_2 = Arc::new(Translate {offset: vec3a(130., 0., 65.), ptr: box_2});
 
+    let ligth_obj = Arc::new(XZRect {min: vec3a(213., 554., 227.), max: vec3a(343., 554., 332.), mat: light.clone()});
+
     let mut world: HitableList = vec![
-        Arc::new(XZRect {min: vec3a(213., 554., 227.), max: vec3a(343., 554., 332.), mat: light.clone()}),
+        ligth_obj.clone(),
         Arc::new(XYRect {min: vec3a(0., 0., 555.), max: vec3a(555., 555., 555.), mat: white.clone()}),
         Arc::new(XZRect {min: vec3a(0., 0., 0.), max: vec3a(555., 0., 555.), mat: white.clone()}),
         Arc::new(XZRect {min: vec3a(0., 555., 0.), max: vec3a(555., 555., 555.), mat: white.clone()}),
@@ -71,6 +73,6 @@ pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Camera) {
         40.,
         aspect_ratio,
     );
-    (build_bvh(&mut world), cam)
+    (build_bvh(&mut world), ligth_obj, cam)
 }
 

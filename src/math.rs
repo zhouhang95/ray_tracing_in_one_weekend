@@ -1,9 +1,11 @@
 use std::mem::transmute;
 use std::f32::consts::{PI, FRAC_1_PI};
+use std::sync::Arc;
 
 use glam::*;
 use rand::Rng;
 
+use crate::hitable::Hitable;
 use crate::lib::RNG;
 
 pub fn vec3a_near_zero(v: Vec3A) -> bool {
@@ -237,5 +239,20 @@ impl PDF for CosinePDF {
 
     fn gen(&self) -> Vec3A {
         self.uvw.local(random_cosine_dir()).normalize()
+    }
+}
+
+pub struct HitablePDF {
+    pub o: Vec3A,
+    pub ptr: Arc<dyn Hitable>,
+}
+
+impl PDF for HitablePDF {
+    fn value(&self, v: Vec3A) -> f32 {
+        self.ptr.pdf_value(self.o, v)
+    }
+
+    fn gen(&self) -> Vec3A {
+        self.ptr.random(self.o)
     }
 }
