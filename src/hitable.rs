@@ -175,6 +175,20 @@ impl Hitable for HitableList {
     fn memo(&self) -> String {
         "HitableList".to_string()
     }
+    fn pdf_value(&self, o: Vec3A, v: Vec3A) -> f32 {
+        let w = 1. / self.len() as f32;
+        let mut sum = 0.;
+        for i in self {
+            sum += i.pdf_value(o, v) * w;
+        }
+        sum
+    }
+
+    fn random(&self, o: Vec3A) -> Vec3A {
+        let i = usize_random(self.len());
+        self[i].random(o)
+    }
+
 }
 
 pub struct BvhNode {

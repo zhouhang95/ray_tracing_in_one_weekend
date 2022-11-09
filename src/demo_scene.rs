@@ -50,7 +50,7 @@ pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Arc<dyn Hitable>, Cam
     let glass = Arc::new( Dielectric { ior: 1.5 });
 
     let sphere = Arc::new(Sphere{c: vec3a(190., 90., 190.), r: 90., mat: glass, name: "".to_string()});
-    let box_1 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 330., 165.), metal));
+    let box_1 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 330., 165.), white.clone()));
     let box_1 = Arc::new(RotateY::new(box_1, 15.));
     let box_1 = Arc::new(Translate {offset: vec3a(265., 0., 295.), ptr: box_1});
     let box_2 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 165., 165.), white.clone()));
@@ -67,7 +67,7 @@ pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Arc<dyn Hitable>, Cam
         Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
         Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
         box_1,
-        sphere,
+        sphere.clone(),
     ];
     let cam = Camera::new(
         vec3a(278., 278., -800.),
@@ -76,6 +76,10 @@ pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Arc<dyn Hitable>, Cam
         40.,
         aspect_ratio,
     );
-    (build_bvh(&mut world), ligth_obj, cam)
+    let lights: Arc<HitableList> = Arc::new(vec![
+        ligth_obj,
+        sphere,
+    ]);
+    (build_bvh(&mut world), lights, cam)
 }
 

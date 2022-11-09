@@ -23,6 +23,13 @@ pub fn f32_random() -> f32 {
     })
 }
 
+pub fn usize_random(max: usize) -> usize {
+    RNG.with(|rng| {
+        rng.borrow_mut().gen_range(0..max)
+    })
+
+}
+
 pub fn vec2_random() -> Vec2 {
     RNG.with(|rng| {
         let x = rng.borrow_mut().gen::<f32>();

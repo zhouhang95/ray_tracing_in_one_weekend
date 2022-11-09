@@ -69,7 +69,7 @@ fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) 
 
 fn main() {
     ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
-    let samples_per_pixel = 1024;
+    let samples_per_pixel = 128;
 
     let nx = 400;
     let ny = 400;
@@ -79,13 +79,13 @@ fn main() {
 
     let (tx, rx) = channel();
     let pool = threadpool::Builder::new().build();
-    let (world, light, cam) = book3(aspect_ratio);
+    let (world, lights, cam) = book3(aspect_ratio);
 
     let mut img: RgbImage = ImageBuffer::new(nx, ny);
     for i in 0..nx {
         let tx = tx.clone();
         let world = world.clone();
-        let light = light.clone();
+        let light = lights.clone();
         pool.execute(move || {
             RNG.with(|rng| {
                 *rng.borrow_mut() = SmallRng::seed_from_u64(95 + i as u64);
