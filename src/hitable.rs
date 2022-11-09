@@ -116,6 +116,21 @@ impl Hitable for Sphere {
     fn memo(&self) -> String {
         self.name.clone()
     }
+    fn pdf_value(&self, o: Vec3A, v: Vec3A) -> f32 {
+        let r = Ray { o, d: v.normalize(), s: Vec2::ZERO };
+        let mut rec = HitRecord::default();
+        if !self.hit(&r, 0.001, f32::INFINITY, &mut rec) {
+            return 0.;
+        }
+        let cos_theta_max = (1. - self.r*self.r/(self.c-o).length_squared()).sqrt();
+        let solid_angle = 2. * PI * (1. - cos_theta_max);
+        1. / solid_angle
+    }
+    fn random(&self, o: Vec3A) -> Vec3A {
+        let oc = self.c - o;
+        let uvw = ONB::build_from_w(oc.normalize());
+        uvw.local(random_to_sphere(self.r, oc.length()))
+    }
 }
 
 pub type HitableList = Vec<Arc<dyn Hitable>>;

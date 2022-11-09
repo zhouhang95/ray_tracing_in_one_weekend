@@ -91,6 +91,17 @@ pub fn random_cosine_dir() -> Vec3A {
     vec3a(x, y, z).normalize()
 }
 
+pub fn random_to_sphere(radius: f32, dist: f32) -> Vec3A {
+    let dist_squared = dist * dist;
+    let z = 1. + f32_random()*((1. - radius*radius/dist_squared).sqrt() - 1.);
+
+    let phi = 2. * PI * f32_random();
+    let x = phi.cos() * (1. - z*z).sqrt();
+    let y = phi.sin() * (1. - z*z).sqrt();
+
+    vec3a(x, y, z)
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Ray {
     pub o: Vec3A,
