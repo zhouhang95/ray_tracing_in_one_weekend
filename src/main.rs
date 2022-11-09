@@ -51,14 +51,19 @@ fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) 
             } else {
                 let light_pdf = Arc::new(HitablePDF{ o: rec.p, ptr: light.clone() });
                 let mix_pdf = MixPDF { p0: srec.pdf.unwrap().clone(), p1: light_pdf, mix: 0.5 };
-                let light_dir = mix_pdf.gen();
+                let (light_dir, direct_light) = mix_pdf.gen();
                 let scattered = Ray {o: rec.p, d: light_dir, s: r.s};
                 let pdf = mix_pdf.value(light_dir);
                 let pdf_value = rec.mat.as_ref().unwrap().scatter_pdf(&r, &rec, &scattered);
-                if pdf_value == 0. {
+                let mut pdf_ratio = pdf_value / pdf;
+                if pdf_ratio == 0. || pdf_ratio.is_nan() {
                     return ret;
                 }
-                ret += srec.attenuation * ray_color(scattered, &world, light, depth+1) * (pdf_value / pdf);
+                let mut contrib = srec.attenuation * ray_color(scattered, &world, light, depth+1) * pdf_ratio;
+                if !direct_light {
+                    contrib = contrib.min(Vec3A::splat(10.));
+                }
+                ret += contrib;
             }
         }
         ret
@@ -69,7 +74,7 @@ fn ray_color(r: Ray, world: &HitableList, light: &Arc<dyn Hitable>, depth: i32) 
 
 fn main() {
     ENV_TEX.set(ImageTex::new("res/newport_loft.jpg".into())).unwrap();
-    let samples_per_pixel = 128;
+    let samples_per_pixel = 1024;
 
     let nx = 400;
     let ny = 400;

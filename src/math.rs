@@ -241,7 +241,7 @@ impl ONB {
 
 pub trait PDF {
     fn value(&self, dir: Vec3A) -> f32;
-    fn gen(&self) -> Vec3A;
+    fn gen(&self) -> (Vec3A, bool);
 }
 
 pub struct CosinePDF {
@@ -261,8 +261,8 @@ impl PDF for CosinePDF {
         dir.dot(self.uvw.w).max(0.) * FRAC_1_PI
     }
 
-    fn gen(&self) -> Vec3A {
-        self.uvw.local(random_cosine_dir()).normalize()
+    fn gen(&self) -> (Vec3A, bool) {
+        (self.uvw.local(random_cosine_dir()).normalize(), false)
     }
 }
 
@@ -276,8 +276,8 @@ impl PDF for HitablePDF {
         self.ptr.pdf_value(self.o, v)
     }
 
-    fn gen(&self) -> Vec3A {
-        self.ptr.random(self.o).normalize()
+    fn gen(&self) -> (Vec3A, bool) {
+        (self.ptr.random(self.o).normalize(), true)
     }
 }
 
@@ -293,7 +293,7 @@ impl PDF for MixPDF {
         lerp(self.p0.value(dir), self.p1.value(dir), self.mix)
     }
 
-    fn gen(&self) -> Vec3A {
+    fn gen(&self) -> (Vec3A, bool) {
         if f32_random() > self.mix {
             self.p0.gen()
         } else {
