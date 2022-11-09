@@ -60,3 +60,48 @@ impl Material for Diffuse {
         rec.norm.dot(scattered.d).max(0.) * FRAC_1_PI
     }
 }
+
+pub struct Metal {
+    pub albedo: Vec3A,
+    pub fuzz: f32,
+}
+
+impl Material for Metal {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+        let reflected = reflect(r_in.d, rec.norm) + self.fuzz * random_in_unit_sphere();
+        srec.spec_ray = Ray {o: rec.p, d: reflected.normalize(), s: r_in.s};
+        srec.attenuation = self.albedo;
+        srec.is_spec = true;
+        srec.pdf = None;
+        true
+    }
+    fn scatter_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 {
+        rec.norm.dot(scattered.d).max(0.) * FRAC_1_PI
+    }
+}
+
+pub struct Dielectric {
+    pub ior: f32,
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+        srec.is_spec = true;
+        srec.pdf = None;
+        srec.attenuation = Vec3A::ONE;
+        let ref_idx = if rec.front_face { 1.0 / self.ior } else { self.ior };
+        let cos_theta = -r_in.d.dot(rec.norm).min(1.0);
+        let sin_thera = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract =  sin_thera * ref_idx > 1.;
+        let rnd_num = RNG.with(|rng| {
+            rng.borrow_mut().gen::<f32>()
+        });
+        let dir = if cannot_refract || reflectance(cos_theta, ref_idx) > rnd_num {
+            reflect(r_in.d, rec.norm)
+        } else {
+            refract(r_in.d, rec.norm, ref_idx)
+        }.normalize();
+        srec.spec_ray = Ray {o: rec.p, d: dir, s: r_in.s};
+        true
+    }
+}

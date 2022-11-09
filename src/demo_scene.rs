@@ -46,8 +46,11 @@ pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Arc<dyn Hitable>, Cam
     let white = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.73, 0.73, 0.73)})});
     let green = Arc::new(Diffuse { albedo: Arc::new(ConstantTex{ col: vec3a(0.12, 0.45, 0.15)})});
     let light = Arc::new(Emission { emit: Arc::new(ConstantTex{ col: vec3a(15., 15., 15.)})});
+    let metal = Arc::new(Metal { albedo: vec3a(0.8, 0.8, 0.8), fuzz: 0. });
+    let glass = Arc::new( Dielectric { ior: 1.5 });
 
-    let box_1 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 330., 165.), white.clone()));
+    let sphere = Arc::new(Sphere{c: vec3a(190., 90., 190.), r: 90., mat: glass, name: "".to_string()});
+    let box_1 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 330., 165.), metal));
     let box_1 = Arc::new(RotateY::new(box_1, 15.));
     let box_1 = Arc::new(Translate {offset: vec3a(265., 0., 295.), ptr: box_1});
     let box_2 = Arc::new(GBox::new(Vec3A::ZERO, vec3a(165., 165., 165.), white.clone()));
@@ -64,7 +67,7 @@ pub fn book3(aspect_ratio: f32) -> (Vec<Arc<dyn Hitable>>, Arc<dyn Hitable>, Cam
         Arc::new(YZRect {min: vec3a(0., 0., 0.), max: vec3a(0., 555., 555.), mat: red.clone()}),
         Arc::new(YZRect {min: vec3a(555., 0., 0.), max: vec3a(555., 555., 555.), mat: green.clone()}),
         box_1,
-        box_2,
+        sphere,
     ];
     let cam = Camera::new(
         vec3a(278., 278., -800.),
